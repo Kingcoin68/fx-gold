@@ -1,0 +1,2131 @@
+<!DOCTYPE html>
+<!--
+  FX GOLD Lưu Khánh Tường — App Forex Mobile  v0.2
+  Bản quyền © 2026 Lưu Khánh Tường – yeahhouse68@gmail.com
+  Dữ liệu: EA FxBridge (MT5) → Firebase Realtime Database → app này.
+-->
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F151D">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="author" content="Lưu Khánh Tường – yeahhouse68@gmail.com">
+<title>FX GOLD Lưu Khánh Tường</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F151D; --s1:#151D27; --s2:#1C2632; --ln:#26323F; --tx:#E6EBF2; --mu:#8D99AB; --dim:#5D6878;
+  --brass:#4AA3F0; --brass-ink:#04111E; --up:#2BC59A; --dn:#F05A5E;
+  --hi:#F05A5E; --md:#F0A23A; --lo:#8D99AB; --hot:rgba(240,90,94,.13); --next:rgba(74,163,240,.11);
+  --f:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --fn:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+[data-theme=light]{
+  --bg:#F2F4F7; --s1:#FFFFFF; --s2:#EBEEF3; --ln:#D9DFE7; --tx:#122030; --mu:#556375; --dim:#97A3B2;
+  --brass:#1C6BC0; --brass-ink:#FFFFFF; --up:#0B9670; --dn:#D23B43; --hi:#D23B43; --md:#C47709;
+  --lo:#7A8797; --hot:rgba(210,59,67,.09); --next:rgba(28,107,192,.08);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.45 var(--f)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.num{font-family:var(--fn);font-variant-numeric:tabular-nums}
+.mu{color:var(--mu)} .up{color:var(--up)} .dn{color:var(--dn)}
+
+/* ---------- khung ---------- */
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;
+  padding:calc(10px + var(--safe-t)) 14px 10px;background:var(--bg);border-bottom:1px solid var(--ln)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand svg{width:22px;height:22px}
+.brand .bt{display:flex;flex-direction:column;line-height:1.05}
+.brand .bt b{font-size:16px;letter-spacing:.02em}
+.brand .bt small{font-size:11px;font-weight:500;color:var(--mu);letter-spacing:.01em}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:99px;font-size:12px;
+  background:var(--s2);color:var(--mu);border:0}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.pill.ok i{background:var(--up)} .pill.bad i{background:var(--dn)} .pill.demo{color:var(--brass)} .pill.demo i{background:var(--brass)}
+.hgap{flex:1}
+.ib{width:38px;height:38px;border:0;border-radius:10px;background:transparent;display:grid;place-items:center;position:relative}
+.ib:active{background:var(--s2)} .ib svg{width:21px;height:21px;stroke:var(--tx)}
+.ib .dot{position:absolute;top:6px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--brass);color:var(--brass-ink);font-size:10px;font-weight:700;line-height:16px}
+main{padding-bottom:calc(72px + var(--safe-b))}
+section.tab{display:none} section.tab.on{display:block}
+nav.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);
+  background:var(--s1);border-top:1px solid var(--ln);padding-bottom:var(--safe-b)}
+nav.tabbar button{border:0;background:none;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:12px;color:var(--mu);position:relative}
+nav.tabbar svg{width:22px;height:22px;stroke:currentColor}
+nav.tabbar button[aria-selected=true]{color:var(--tx)}
+nav.tabbar button[aria-selected=true]::before{content:"";position:absolute;top:-1px;left:30%;right:30%;height:2px;background:var(--brass);border-radius:2px}
+.banner{margin:10px 14px 0;padding:10px 12px;border-radius:10px;background:var(--next);color:var(--tx);font-size:13px;display:flex;gap:10px;align-items:center}
+.banner b{color:var(--brass)}
+.banner button{margin-left:auto;border:0;background:var(--brass);color:var(--brass-ink);border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+
+/* ---------- tab cặp tiền ---------- */
+.lists{display:flex;gap:6px;overflow-x:auto;padding:12px 14px 6px;scrollbar-width:none}
+.lists::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--ln);background:var(--s1);color:var(--mu);border-radius:99px;padding:6px 12px;font-size:13px}
+.chip[aria-pressed=true]{background:var(--tx);color:var(--bg);border-color:var(--tx);font-weight:600}
+.chip.add{color:var(--brass);border-style:dashed}
+.listhead{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 6px;font-size:12.5px;color:var(--mu)}
+.listhead button{border:0;background:none;color:var(--brass);font-weight:600;font-size:13px;padding:6px 0}
+.row{position:relative;padding:11px 16px 12px;border-bottom:1px solid var(--ln);background:var(--bg);transition:background .25s}
+.row.hot{background:var(--hot)}
+.row .r1{display:flex;align-items:baseline;gap:8px}
+.row .nm{font-weight:600;font-size:16px;letter-spacing:-.01em}
+.row .sfx{font-weight:400;font-size:12px;color:var(--dim);margin-left:2px}
+.row .bid{margin-left:auto;font-size:19px;font-weight:600;padding:0 3px;border-radius:4px;transition:background .5s,color .5s}
+.row .bid.fu{background:rgba(43,197,154,.18);color:var(--up);transition:none}
+.row .bid.fd{background:rgba(240,90,94,.18);color:var(--dn);transition:none}
+.row .chg{width:68px;text-align:right;font-size:13px;font-weight:600}
+.row .r2{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:12.5px;color:var(--mu);min-height:0}
+.row .r2:empty{display:none}
+.imp{display:inline-block;flex:none;padding:0 6px;border-radius:5px;font-size:11px;font-weight:700;line-height:17px}
+.imp.i3{background:var(--hi);color:#fff} .imp.i2{background:var(--md);color:#1a1000} .imp.i1{background:var(--s2);color:var(--mu)}
+.row .ev{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.row .cd{margin-left:auto;flex:none;font-family:var(--fn);font-size:12.5px;color:var(--tx)}
+.row.hot .cd{color:var(--hi);font-weight:600}
+.row .r3{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:5px;font-size:12px;color:var(--mu)}
+.row .r3:empty{display:none}
+.sr b{font-weight:600;color:var(--tx);font-family:var(--fn);font-size:12px}
+.sr.k b{color:var(--dn)} .sr.h b{color:var(--up)}
+.fuse{position:absolute;left:0;bottom:-1px;height:2px;background:transparent;width:100%}
+.fuse i{display:block;height:100%;width:0;background:var(--md);opacity:.75;transition:width 1s linear}
+.fuse.i3 i{background:var(--hi)} .fuse.i1 i{background:var(--lo)}
+.empty{padding:40px 24px;text-align:center;color:var(--mu)}
+.empty button{margin-top:14px}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:600;background:var(--brass);color:var(--brass-ink)}
+.btn.ghost{background:var(--s2);color:var(--tx)}
+.btn.danger{background:transparent;color:var(--dn);border:1px solid var(--ln)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:8px}
+.btn:disabled{opacity:.45}
+
+/* ---------- lịch ---------- */
+.filters{padding:10px 14px 4px;display:flex;flex-direction:column;gap:8px}
+.frow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none} .frow::-webkit-scrollbar{display:none}
+.dayh{position:sticky;top:59px;z-index:5;padding:8px 16px;background:var(--s1);border-bottom:1px solid var(--ln);font-size:13px;font-weight:600;color:var(--mu)}
+.dayh.today{color:var(--brass)}
+.ce{display:grid;grid-template-columns:50px 40px 1fr;gap:4px 8px;padding:10px 16px;border-bottom:1px solid var(--ln);align-items:start;width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0}
+.ce .t{font-family:var(--fn);font-size:13.5px;font-weight:500}
+.ce.i3 .t{color:var(--hi);font-weight:600}
+.ce .c{font-weight:600;font-size:13px}
+.ce .n{font-size:14px}
+.ce .v{grid-column:3;display:flex;gap:12px;font-size:12px;color:var(--mu)}
+.ce .v b{font-family:var(--fn);font-weight:500;color:var(--tx)}
+.ce.past.dim{opacity:.42}
+.ce.next{background:var(--next)}
+.ce.next .n{font-weight:700}
+.ce .cdn{grid-column:3;font-family:var(--fn);font-size:12.5px;color:var(--brass);font-weight:600}
+
+/* ---------- lọc (xem trước) ---------- */
+.pv{padding:16px}
+.pv h2{font-size:17px;margin:4px 0 6px;letter-spacing:-.01em}
+.pv p{margin:0 0 12px;color:var(--mu);font-size:14px}
+.rule{background:var(--s1);border:1px solid var(--ln);border-radius:12px;padding:12px;margin:12px 0}
+.rule .gh{font-size:12.5px;color:var(--mu);margin:8px 0 4px}
+.cond{display:flex;flex-wrap:wrap;gap:5px;align-items:center;padding:7px 0;border-top:1px dashed var(--ln);font-size:13.5px}
+.cond:first-of-type{border-top:0}
+.tok{background:var(--s2);border-radius:6px;padding:2px 7px}
+.tok.op{background:transparent;color:var(--brass);font-weight:600;padding:2px 2px}
+.tok.tf{border:1px solid var(--ln);background:transparent;font-family:var(--fn);font-size:12px}
+.plan li{margin:4px 0;font-size:14px}
+
+/* ---------- bộ lọc ---------- */
+.sh2 h2{margin:6px 0 4px}
+.sh2 p{margin:0 0 12px}
+.fc{margin-top:12px;border:1px solid var(--ln);border-radius:12px;background:var(--s1);overflow:hidden}
+.fc.off{opacity:.6}
+.fcm{display:block;width:100%;text-align:left;border:0;background:none;padding:12px 14px 8px}
+.fcn{display:block;font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.fcl{display:block;font-size:12.5px;color:var(--mu);margin-top:4px;line-height:1.5;max-height:3em;overflow:hidden}
+.fch{display:block;font-size:13px;margin-top:6px} .fch b{color:var(--up)}
+.fcs{display:flex;gap:18px;padding:8px 14px 12px;border-top:1px solid var(--ln)}
+.fcsw{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu)}
+.tpl{display:flex;flex-wrap:wrap;gap:6px}
+.lop{color:var(--brass);font-weight:700;font-size:12px;letter-spacing:.04em}
+.lpar{color:var(--dim);font-weight:600;margin:0 2px}
+.logic{margin:12px 0;padding:12px;border-radius:12px;background:var(--next);border:1px solid var(--ln)}
+.logic .lh{font-size:12.5px;color:var(--mu);margin-bottom:6px}
+.logic .ll{font-size:14px;line-height:1.55;padding:3px 0}
+.logic .loff{margin-top:8px;padding-top:8px;border-top:1px dashed var(--ln);font-size:12.5px;color:var(--dim);display:flex;flex-direction:column;gap:2px}
+.tree{margin:6px 0}
+.g2{border:1px solid var(--ln);border-radius:12px;padding:8px 10px 10px;background:var(--s1)}
+.g2.sub{background:var(--bg);margin:2px 0}
+.g2.off{opacity:.5}
+.g2h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.g2n{font-weight:700;font-size:13.5px}
+.g2s{font-size:12px;color:var(--mu)}
+.opsw{display:inline-flex;background:var(--s2);border-radius:8px;padding:2px;gap:2px}
+.opsw button{border:0;background:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--mu)}
+.opsw button[aria-pressed=true]{background:var(--brass);color:var(--brass-ink)}
+.g2i{margin:8px 0 0 10px;padding-left:10px;border-left:2px solid var(--ln)}
+.jn{font-size:11px;font-weight:700;color:var(--brass);letter-spacing:.05em;padding:3px 0 3px 2px}
+.cn{display:flex;align-items:flex-start;gap:8px;padding:6px 0}
+.cn.off .ct{opacity:.45;text-decoration:line-through}
+.ct{width:100%;text-align:left;border:1px solid var(--ln);background:var(--bg);border-radius:9px;padding:8px 10px;font-size:13.5px;line-height:1.4}
+.cw{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ca{display:flex;gap:4px;justify-content:flex-end}
+.mini{border:0;background:var(--s2);color:var(--mu);border-radius:6px;min-width:28px;height:26px;font-size:12px;padding:0 6px}
+.tk{position:relative;width:24px;height:24px;flex:none;margin-top:6px}
+.g2h .tk{margin-top:0}
+.tk input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.tk span{position:absolute;inset:0;border:2px solid var(--dim);border-radius:6px}
+.tk input:checked+span{background:var(--brass);border-color:var(--brass)}
+.tk input:checked+span::after{content:"";position:absolute;left:6px;top:1px;width:6px;height:12px;border:solid var(--brass-ink);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.tk input:focus-visible+span{outline:2px solid var(--brass);outline-offset:2px}
+.g2a{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.rsum{margin:12px 0 6px;font-size:13px;color:var(--mu)} .rsum b{color:var(--up);font-size:15px}
+.rr{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--ln);background:none;padding:10px 0}
+.rr1{display:flex;align-items:baseline;gap:6px}
+.rr1 b{font-size:15px}
+.rb{margin-left:auto;font-size:12px;color:var(--mu)}
+.rr.hit .rb{color:var(--up);font-weight:700}
+.rcs{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.rc{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;border-radius:6px;padding:2px 7px;background:var(--s2);color:var(--mu)}
+.rc i{font-style:normal;font-weight:700}
+.rc.y{background:rgba(43,197,154,.14);color:var(--tx)} .rc.y i{color:var(--up)}
+.rc.n i{color:var(--dn)}
+.rc .num{font-size:11px}
+.pps{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pp{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mu);flex:1;min-width:90px}
+.cprev{margin:16px 0 8px;padding:10px 12px;border-radius:10px;background:var(--next);font-size:14px}
+.cprev span{color:var(--mu);font-size:12.5px}
+.fm{color:var(--brass);font-weight:600}
+
+/* ---------- sheet ---------- */
+.ov{position:fixed;inset:0;z-index:40;background:rgba(5,8,12,.55);display:flex;align-items:flex-end;opacity:0;transition:opacity .2s}
+.ov.on{opacity:1}
+.sheet{width:100%;max-height:94vh;background:var(--bg);border-radius:16px 16px 0 0;display:flex;flex-direction:column;transform:translateY(24px);transition:transform .22s ease-out;border-top:1px solid var(--ln)}
+.ov.on .sheet{transform:none}
+.sheet.full{height:94vh}
+.sh{display:flex;align-items:center;gap:8px;padding:12px 10px 10px 16px;border-bottom:1px solid var(--ln)}
+.sh h3{margin:0;font-size:16.5px;flex:1;letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh .x{border:0;background:var(--s2);border-radius:8px;padding:6px 12px;font-size:13.5px}
+.sb{flex:1;overflow-y:auto;padding:4px 16px calc(24px + var(--safe-b));-webkit-overflow-scrolling:touch}
+.sf{padding:10px 16px calc(12px + var(--safe-b));border-top:1px solid var(--ln);display:flex;gap:8px}
+.sf .btn{flex:1}
+@media (prefers-reduced-motion:reduce){.ov,.sheet,.row,.fuse i,.row .bid{transition:none!important}}
+
+/* ---------- form ---------- */
+.fs{margin:14px 0 6px;font-size:13px;font-weight:600;color:var(--mu)}
+.fl{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--ln)}
+.fl label,.fl .lb{flex:1;font-size:14.5px}
+.fl small{display:block;color:var(--mu);font-size:12.5px}
+.in{background:var(--s1);border:1px solid var(--ln);border-radius:9px;padding:9px 11px;width:100%;font-size:15px}
+.in.num{font-family:var(--fn)}
+.in.w{width:110px;text-align:right}
+.seg{display:flex;background:var(--s2);border-radius:10px;padding:3px;gap:3px;margin:8px 0}
+.seg button{flex:1;border:0;background:none;border-radius:8px;padding:8px 4px;font-size:13px;color:var(--mu)}
+.seg button[aria-pressed=true]{background:var(--s1);color:var(--tx);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw{position:relative;width:46px;height:28px;flex:none}
+.sw input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
+.sw span,.tk span{pointer-events:none}
+.sw span{position:absolute;inset:0;border-radius:99px;background:var(--s2);border:1px solid var(--ln);transition:background .15s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--mu);transition:transform .15s,background .15s}
+.sw input:checked+span{background:var(--brass);border-color:var(--brass)}
+.sw input:checked+span::after{transform:translateX(18px);background:var(--brass-ink)}
+.sw input:focus-visible+span{outline:2px solid var(--brass);outline-offset:2px}
+.tfs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.tfs label{display:inline-flex}
+.tfs input{position:absolute;opacity:0}
+.tfs span{border:1px solid var(--ln);border-radius:8px;padding:6px 10px;font-family:var(--fn);font-size:12.5px;color:var(--mu)}
+.tfs input:checked+span{background:var(--tx);color:var(--bg);border-color:var(--tx)}
+.tfs input:focus-visible+span{outline:2px solid var(--brass)}
+.hint{font-size:12.5px;color:var(--mu);margin:6px 0}
+.code{display:block;background:var(--s1);border:1px solid var(--ln);border-radius:9px;padding:10px;font-family:var(--fn);font-size:12px;white-space:pre-wrap;word-break:break-all;margin:6px 0}
+.step{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--ln)}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--s2);display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--brass)}
+.step h4{margin:2px 0 4px;font-size:15px}
+.step p,.step li{font-size:13.5px;color:var(--mu);margin:3px 0}
+.step ol{padding-left:18px;margin:4px 0}
+.cp{display:flex;gap:8px;align-items:center}
+.cp .code{flex:1}
+
+/* ---------- picker ---------- */
+.search{position:sticky;top:0;background:var(--bg);padding:10px 0 8px;z-index:2}
+.grp{border-bottom:1px solid var(--ln)}
+.gh2{display:flex;align-items:center;gap:10px;padding:12px 0}
+.gh2 .t{flex:1;font-weight:600}
+.gh2 .c{font-size:12.5px;color:var(--mu)}
+.gh2 .tg{border:0;background:none;color:var(--mu);padding:4px 6px;font-size:13px}
+.ck{width:22px;height:22px;flex:none;accent-color:var(--brass)}
+.it{display:flex;align-items:center;gap:10px;padding:8px 0 8px 4px}
+.it .s{font-weight:600;font-size:14.5px;min-width:96px}
+.it .d{font-size:12.5px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.items{padding-bottom:6px}
+
+/* ---------- chi tiết ---------- */
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.kv div{background:var(--s1);border:1px solid var(--ln);border-radius:10px;padding:8px 10px}
+.kv small{display:block;font-size:11.5px;color:var(--mu)}
+.kv b{font-family:var(--fn);font-weight:600;font-size:14.5px}
+table.srt{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}
+.srt th{text-align:left;color:var(--mu);font-weight:500;font-size:12px;padding:6px 4px;border-bottom:1px solid var(--ln)}
+.srt td{padding:7px 4px;border-bottom:1px solid var(--ln);font-family:var(--fn);font-size:12.5px}
+.srt td:first-child{font-family:var(--f);font-weight:600;width:52px}
+.srt small{font-family:var(--f);font-size:11.5px}
+.al{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.al .tx{flex:1;min-width:0}
+.al .tx b{font-weight:600}
+.al .tx small{display:block;color:var(--mu);font-size:12.5px}
+.al .del{border:0;background:none;color:var(--dn);font-size:13px;padding:6px}
+.lg{padding:8px 0;border-bottom:1px solid var(--ln);font-size:13.5px}
+.lg small{color:var(--mu);font-family:var(--fn);font-size:12px;margin-right:6px}
+
+.toast{position:fixed;left:12px;right:12px;bottom:calc(80px + var(--safe-b));z-index:60;background:var(--tx);color:var(--bg);border-radius:12px;padding:11px 14px;font-size:14px;font-weight:500;transform:translateY(20px);opacity:0;transition:all .2s;pointer-events:none}
+.toast.on{transform:none;opacity:1}
+.foot{padding:22px 16px 8px;text-align:center;font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" aria-label="FX GOLD Lưu Khánh Tường">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="var(--brass)" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="var(--brass)" stroke-width="2"/><path d="M12 12 19 5" stroke="var(--tx)" stroke-width="2" stroke-linecap="round"/></svg>
+    <span class="bt"><b>FX GOLD</b><small>Lưu Khánh Tường</small></span>
+  </div>
+  <button class="pill" id="status" type="button"><i></i><span>…</span></button>
+  <div class="hgap"></div>
+  <button class="ib" id="btnAlerts" type="button" aria-label="Báo động">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+    <span class="dot" id="alCount" hidden>0</span>
+  </button>
+  <button class="ib" id="btnSettings" type="button" aria-label="Cài đặt">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+  </button>
+</header>
+
+<main>
+  <div id="banner"></div>
+  <section class="tab on" id="tab-pairs" aria-label="Cặp tiền">
+    <div class="lists" id="lists"></div>
+    <div class="listhead"><span id="listInfo"></span><button type="button" id="btnPick">Chọn mã</button></div>
+    <div id="rows"></div>
+  </section>
+  <section class="tab" id="tab-scan" aria-label="Lọc phân tích"></section>
+  <section class="tab" id="tab-cal" aria-label="Lịch kinh tế">
+    <div class="filters" id="calFilters"></div>
+    <div id="calList"></div>
+  </section>
+</main>
+
+<nav class="tabbar" role="tablist">
+  <button role="tab" aria-selected="true" data-tab="pairs" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Cặp tiền</button>
+  <button role="tab" aria-selected="false" data-tab="scan" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>Lọc phân tích</button>
+  <button role="tab" aria-selected="false" data-tab="cal" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Lịch kinh tế</button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   FX GOLD Lưu Khánh Tường v0.2 — © 2026 Lưu Khánh Tường – yeahhouse68@gmail.com
+   Cấu trúc dữ liệu trên Firebase (mọi thứ nằm dưới /<khoá bí mật>/):
+     settings  cài đặt app (JSON)          ea    cài đặt rút gọn cho EA (chuỗi)
+     ctl       {rev, live, symreq}         q     giá {mã:{n,b,a,d,o,h,l,t}}
+     sym       danh sách mã của sàn         cal   {gen, ev:[{id,t,c,i,n,a,f,p}]}
+     sr        hỗ trợ/kháng cự              hb    nhịp tim EA
+     fired     báo động 1 lần đã báo        log   nhật ký báo động
+     scan      kết quả bộ lọc {fid:{t, r:{mã:{m, c:{cid:"ok;TF,ok,a,b;…"}}}}}
+   ===================================================================== */
+const VER = '0.2';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const TZ = 'Asia/Ho_Chi_Minh';
+const fT = new Intl.DateTimeFormat('vi-VN', {timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false});
+const fD = new Intl.DateTimeFormat('vi-VN', {timeZone: TZ, weekday: 'long', day: '2-digit', month: '2-digit'});
+const fK = new Intl.DateTimeFormat('en-CA', {timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'});
+const fDT = new Intl.DateTimeFormat('vi-VN', {timeZone: TZ, hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', hour12: false});
+const tVN = ms => fT.format(ms);
+const dayKey = ms => fK.format(ms);
+function hms(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  const d = Math.floor(sec / 86400), h = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  const p = n => String(n).padStart(2, '0');
+  return (d ? d + ' ngày ' : '') + p(h) + ':' + p(m) + ':' + p(s);
+}
+const fk = s => String(s).replace(/[.#$\[\]\/]/g, '_');
+const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+const IMP = {3: 'Cao', 2: 'TB', 1: 'Thấp'};
+const TFS = ['M5', 'M15', 'M30', 'H1', 'H4', 'D1', 'W1'];
+const TF_BARS = {M5: 288, M15: 192, M30: 144, H1: 120, H4: 132, D1: 130, W1: 104};
+const TF_HINT = {M5: '1 ngày', M15: '2 ngày', M30: '3 ngày', H1: '1 tuần', H4: '1 tháng', D1: '6 tháng', W1: '2 năm'};
+
+/* ---------- phân loại mã ---------- */
+const CCY = 'USD EUR GBP JPY CHF CAD AUD NZD SGD HKD NOK SEK DKK PLN HUF CZK TRY ZAR MXN CNH CNY THB INR IDR ILS RUB BRL KRW TWD PHP MYR KES NGN ARS CLP COP SAR AED QAR KWD BHD OMR JOD UAH RON BGN ISK EGP MAD VND'.split(' ');
+const G8 = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD'];
+const MAJ = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD'];
+const GROUPS = [['fx_major', 'Forex chính'], ['fx_cross', 'Forex chéo'], ['fx_exotic', 'Forex ngoại lai'], ['metal', 'Kim loại'],
+  ['energy', 'Năng lượng'], ['index', 'Chỉ số'], ['crypto', 'Crypto'], ['stock', 'Cổ phiếu'], ['other', 'Khác']];
+function base(n) {
+  return String(n).replace(/^[#._]+/, '').replace(/[._#\-].*$/, '').replace(/[a-z]+$/, '') || n;
+}
+function suffix(n) { const b = base(n); const i = String(n).indexOf(b); return i >= 0 ? String(n).slice(i + b.length) : ''; }
+const CLS = {};
+function cls(n) {
+  if (CLS[n]) return CLS[n];
+  const b = base(n).toUpperCase(), info = symInfo(n), p = (info && info.p || '').toLowerCase();
+  let g = 'other';
+  if (/^X(AU|AG|PT|PD)[A-Z]{3}$/.test(b) || /metal/.test(p)) g = 'metal';
+  else if (/crypto/.test(p) || /^(BTC|ETH|LTC|XRP|BCH|SOL|ADA|DOGE|DOT|BNB|AVAX|LINK|MATIC|TRX|XLM|UNI|SHIB|TON|XTZ|ETC|ATOM|NEAR|FIL)/.test(b)) g = 'crypto';
+  else if (/(OIL|BRENT|WTI|XNG|NGAS|NATGAS|GASOIL)/.test(b) || /energ/.test(p)) g = 'energy';
+  else if (b.length === 6 && CCY.includes(b.slice(0, 3)) && CCY.includes(b.slice(3))) {
+    g = MAJ.includes(b) ? 'fx_major' : (G8.includes(b.slice(0, 3)) && G8.includes(b.slice(3)) ? 'fx_cross' : 'fx_exotic');
+  }
+  else if (/indic|index/.test(p) || /^(US30|US500|US100|USTEC|NAS|SPX|DJ|DE30|DE40|GER|DAX|UK100|FTSE|JP225|NIK|HK50|HSI|AUS200|FR40|CAC|STOXX|EU50|ES35|IT40|CN50|IN50|SG30|VIX|USDX|DXY)/.test(b)) g = 'index';
+  else if (/stock|share|equit/.test(p) || (info && /^[A-Z]{1,5}$/.test(b) && !p.includes('forex'))) g = 'stock';
+  return (CLS[n] = g);
+}
+/* ---------- định nghĩa pip ---------- */
+const PIP_DEF = {
+  fx:     {size: 0.0001, unit: 'pip',   label: 'Forex thường', note: '1 pip = 0.0001'},
+  fxjpy:  {size: 0.01,   unit: 'pip',   label: 'Cặp có JPY', note: '1 pip = 0.01'},
+  gold:   {size: 1,      unit: 'giá',   label: 'Vàng (XAU)', note: '1 giá = 1 USD'},
+  silver: {size: 0.01,   unit: 'pip',   label: 'Bạc (XAG)', note: '1 pip = 0.01 USD'},
+  metal:  {size: 1,      unit: 'giá',   label: 'Bạch kim, Palladium', note: '1 giá = 1 USD'},
+  energy: {size: 0.01,   unit: 'pip',   label: 'Dầu, khí', note: '1 pip = 0.01 USD'},
+  index:  {size: 1,      unit: 'điểm',  label: 'Chỉ số', note: '1 điểm = 1.0'},
+  crypto: {size: 1,      unit: 'giá',   label: 'Crypto (BTC…)', note: '1 giá = 1 USD'},
+  stock:  {size: 0.01,   unit: 'cent',  label: 'Cổ phiếu', note: '1 cent = 0.01 USD'},
+  other:  {size: 0,      unit: 'pip',   label: 'Mã khác', note: '1 pip = 10 × bước giá nhỏ nhất của sàn'}
+};
+function pipKey(n) {
+  const g = cls(n), b = base(n);
+  if (g.startsWith('fx')) return b.includes('JPY') ? 'fxjpy' : 'fx';
+  if (g === 'metal') return b.startsWith('XAU') ? 'gold' : b.startsWith('XAG') ? 'silver' : 'metal';
+  return PIP_DEF[g] ? g : 'other';
+}
+function pipOf(n) {
+  const o = S.set.pips.sym[fk(n)];
+  if (o && o.size > 0) return {size: +o.size, unit: o.unit || 'pip', own: true};
+  const k = pipKey(n), g = S.set.pips.grp[k] || {}, d = PIP_DEF[k];
+  let size = +g.size || d.size;
+  if (!size) { const i = symInfo(n); size = i ? 10 * Math.pow(10, -i.d) : 0.0001; }
+  return {size, unit: g.unit || d.unit};
+}
+const fmtDist = (n, v) => { const p = pipOf(n), x = v / p.size; return (Math.abs(x) >= 100 ? x.toFixed(0) : x.toFixed(1)) + ' ' + p.unit; };
+/* ---------- tiền tệ liên quan (cho tin) ---------- */
+function ccysOf(n) {
+  const o = S.set.ccy[fk(n)];
+  if (o) return o.split(/[\s,+]+/).filter(Boolean).map(x => x.toUpperCase());
+  const g = cls(n), b = base(n).toUpperCase();
+  if (g.startsWith('fx')) return [b.slice(0, 3), b.slice(3, 6)];
+  if (g === 'metal' || g === 'energy' || g === 'crypto') { const q = b.slice(-3); return [CCY.includes(q) ? q : 'USD']; }
+  if (g === 'index') {
+    if (/^(DE|GER|DAX|FR|CAC|STOXX|EU|ES|IT)/.test(b)) return ['EUR'];
+    if (/^(UK|FTSE)/.test(b)) return ['GBP'];
+    if (/^(JP|NIK)/.test(b)) return ['JPY'];
+    if (/^(HK|HSI|CN)/.test(b)) return ['CNY', 'HKD'];
+    if (/^AUS/.test(b)) return ['AUD'];
+    if (/^IN/.test(b)) return ['INR'];
+    if (/^SG/.test(b)) return ['SGD'];
+    return ['USD'];
+  }
+  return ['USD'];
+}
+
+/* ---------- trạng thái ---------- */
+const DEF_LIST = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'USDCAD', 'AUDUSD', 'NZDUSD', 'XAUUSD', 'BTCUSD', 'USOIL', 'US30', 'US500', 'USTEC', 'DE30', 'JP225'];
+function defaults() {
+  return {
+    v: 1,
+    lists: [{n: 'Chính', s: DEF_LIST.slice()}], active: 'Chính',
+    alerts: {}, pips: {grp: {}, sym: {}}, ccy: {},
+    news: {before: 3, after: 3, hl: 3, show: 2, notifyMin: 0, notifyImp: 3},
+    sr: {on: true, all: false, tfs: ['H1', 'H4', 'D1'], bars: Object.assign({}, TF_BARS)},
+    notify: {tg: true, push: true},
+    cal: {past: 'dim', imps: [3, 2, 1], only: false},
+    filters: {}, fseed: false,
+    ribbons: [{n: 'Chùm 9-21-50', p: '9,21,50'}, {n: 'Chùm 5-8-13', p: '5,8,13'}, {n: 'Chùm 20-50-200', p: '20,50,200'}],
+    theme: 'dark'
+  };
+}
+function mergeSet(x) {
+  const d = defaults();
+  if (!x || typeof x !== 'object') x = {};
+  const o = Object.assign(d, x);
+  for (const k of ['news', 'sr', 'notify', 'cal']) o[k] = Object.assign(defaults()[k], x[k] || {});
+  o.sr.bars = Object.assign({}, TF_BARS, (x.sr || {}).bars || {});
+  o.pips = Object.assign({grp: {}, sym: {}}, x.pips || {}); o.pips.grp = o.pips.grp || {}; o.pips.sym = o.pips.sym || {};
+  o.ccy = x.ccy || {}; o.alerts = x.alerts || {};
+  let L = x.lists; if (L && !Array.isArray(L)) L = Object.values(L);
+  o.lists = (L || d.lists).filter(l => l && l.n).map(l => ({n: l.n, s: Array.isArray(l.s) ? l.s.filter(Boolean) : String(l.s || '').split(',').filter(Boolean)}));
+  if (!o.lists.length) o.lists = defaults().lists;
+  if (!o.lists.some(l => l.n === o.active)) o.active = o.lists[0].n;
+  if (!Array.isArray(o.sr.tfs)) o.sr.tfs = String(o.sr.tfs || '').split(',').filter(Boolean);
+  if (!Array.isArray(o.cal.imps)) o.cal.imps = String(o.cal.imps || '').split(',').filter(Boolean).map(Number);
+  for (const a of Object.values(o.alerts)) { a.on = a.on !== false; }
+  o.ribbons = arr(x.ribbons).filter(r => r && r.p); if (!o.ribbons.length) o.ribbons = defaults().ribbons;
+  if (!x.fseed) { o.filters = {}; const t = tplFilters()[0]; const F = normFilter({id: uid(), name: t.name, on: true, alert: false, bar: 1, scope: ['*'], root: t.root, created: Date.now()}); o.filters[F.id] = F; o.fseed = true; }
+  else { o.filters = {}; for (const [k, F] of Object.entries(x.filters || {})) if (F && F.root) o.filters[k] = normFilter(Object.assign({}, F, {id: F.id || k})); }
+  return o;
+}
+function toFb(set) {
+  const o = JSON.parse(JSON.stringify(set));
+  o.lists = o.lists.map(l => ({n: l.n, s: l.s.join(',')}));
+  o.sr.tfs = o.sr.tfs.join(','); o.cal.imps = o.cal.imps.join(',');
+  return o;
+}
+const S = {
+  cfg: LS.get('fxr.cfg', {db: '', key: '', mode: 'demo'}),
+  set: mergeSet(LS.get('fxr.set', null)),
+  root: {}, sym: [], symMap: {}, q: {}, sr: {}, cal: [], hb: null, fired: {}, log: {},
+  scan: {}, dscan: {}, demo: false, conn: 'off', err: '', tab: 'pairs'
+};
+function symInfo(n) { return S.symMap[n]; }
+function allWatch() {
+  const w = new Set();
+  S.set.lists.forEach(l => l.s.forEach(x => w.add(x)));
+  Object.values(S.set.alerts).forEach(a => { if (a.sym && a.sym !== '-') w.add(a.sym); });
+  return [...w];
+}
+function curList() { return S.set.lists.find(l => l.n === S.set.active) || S.set.lists[0]; }
+
+/* ---------- lưu & đồng bộ ---------- */
+let saveT = 0;
+function save(now) {
+  LS.set('fxr.set', S.set);
+  clearTimeout(saveT);
+  saveT = setTimeout(pushSettings, now ? 0 : 500);
+}
+async function pushSettings() {
+  if (S.demo || S.conn !== 'on') return;
+  try {
+    await FB.put('/settings', toFb(S.set));
+    await FB.put('/ea', buildEa());
+    await FB.put('/ctl/rev', {'.sv': 'timestamp'});
+  } catch (e) { toast('Chưa lưu lên máy chủ: ' + e.message); }
+}
+function clean(s) { return String(s || '').replace(/[|\n\r]/g, ' ').slice(0, 80); }
+function buildEa() {
+  const L = ['V|1'];
+  const w = allWatch();
+  L.push('W|' + w.join(','));
+  L.push('T|' + (S.set.notify.tg ? 1 : 0) + '|' + (S.set.notify.push ? 1 : 0));
+  const cc = new Set(); w.forEach(n => ccysOf(n).forEach(c => cc.add(c)));
+  L.push('N|' + (S.set.news.notifyMin | 0) + '|' + (S.set.news.notifyImp | 0) + '|' + [...cc].join('+'));
+  L.push('S|' + S.set.sr.tfs.map(t => t + ':' + (S.set.sr.bars[t] || TF_BARS[t] || 120)).join(','));
+  for (const a of Object.values(S.set.alerts)) {
+    if (!a.on) continue;
+    if (!(a.rep > 0) && S.fired[a.id]) continue;
+    const f = ['A', a.id, a.sym || '-', a.type];
+    if (a.type === 'L') f.push(+a.p1, 0, a.dir || 'B');
+    else if (a.type === 'Z') f.push(Math.min(+a.p1, +a.p2), Math.max(+a.p1, +a.p2), '');
+    else if (a.type === 'R') f.push(+(a.dist * pipOf(a.sym).size).toPrecision(10), 0, (a.tfs || []).join(','));
+    else if (a.type === 'N') f.push(a.mins | 0, a.imp | 0, (a.ccys && a.ccys.length ? a.ccys : ccysOf(a.sym)).join('+'));
+    else if (a.type === 'E') f.push(a.mins | 0, 0, String(a.ev));
+    else continue;
+    f.push(a.rep | 0, clean(alertText(a)) + (a.note ? ' — ' + clean(a.note) : ''));
+    L.push(f.join('|'));
+  }
+  w.forEach(n => L.push('P|' + n + '|' + pipOf(n).size));
+  for (const F of Object.values(S.set.filters)) {
+    if (!F.on || F.root.on === false) continue;
+    const syms = scopeSyms(F); if (!syms.length) continue;
+    L.push(['F', F.id, 1, F.alert ? 1 : 0, F.amode || 'B', F.acool | 0, F.atf || 'H1', F.bar ? 1 : 0, syms.join(','), clean(F.name)].join('|'));
+    const walk = (g, parent) => {
+      L.push(['G', F.id, g.id, parent, g.op === 'O' ? 'O' : 'A', g.on === false ? 0 : 1].join('|'));
+      for (const it of g.items || []) {
+        if (it.k === 'g') walk(it, g.id);
+        else L.push(['C', F.id, it.id, g.id, it.on === false ? 0 : 1, it.tm === 'O' ? 'O' : 'A', (it.tfs || []).join(','), it.L, it.cmp, it.R || '', +it.n1 || 0, +it.n2 || 0, clean(condText(it))].join('|'));
+      }
+    };
+    walk(F.root, '-');
+  }
+  return L.join('\n');
+}
+
+/* ---------- Firebase (REST + luồng sự kiện) ---------- */
+const FB = {
+  es: null, liveT: 0,
+  base() { return S.cfg.db.trim().replace(/\/+$/, '') + '/' + S.cfg.key.trim(); },
+  async req(method, path, body) {
+    const r = await fetch(this.base() + path + '.json' + (method === 'GET' ? '' : '?print=silent'),
+      {method, body: body === undefined ? undefined : JSON.stringify(body)});
+    if (!r.ok) { let t = ''; try { t = (await r.json()).error; } catch (e) {} throw new Error(t || ('HTTP ' + r.status)); }
+    return method === 'GET' ? r.json() : null;
+  },
+  put(p, v) { return this.req('PUT', p, v); },
+  del(p) { return this.req('DELETE', p); },
+  get(p) { return this.req('GET', p); },
+  connect() {
+    this.close();
+    if (!S.cfg.db || !S.cfg.key) return;
+    S.conn = 'wait'; S.err = ''; renderStatus();
+    let es;
+    try { es = new EventSource(this.base() + '.json'); } catch (e) { S.conn = 'err'; S.err = e.message; renderStatus(); return; }
+    this.es = es;
+    let first = true;
+    const onMsg = (type) => (ev) => {
+      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (!m || typeof m.path !== 'string') return;
+      if (type === 'put') applyPut(m.path, m.data); else applyPatch(m.path, m.data);
+      if (first) { first = false; S.conn = 'on'; onFirstSnapshot(); }
+      renderStatus();
+    };
+    es.addEventListener('put', onMsg('put'));
+    es.addEventListener('patch', onMsg('patch'));
+    es.addEventListener('cancel', () => { S.conn = 'err'; S.err = 'Máy chủ từ chối (kiểm tra Rules trên Firebase)'; renderStatus(); });
+    es.onerror = () => { if (S.conn !== 'on') { S.conn = 'err'; S.err = S.err || 'Không kết nối được máy chủ'; } renderStatus(); };
+    es.onopen = () => { if (S.conn === 'err') { S.conn = 'wait'; S.err = ''; renderStatus(); } };
+    this.liveT = setInterval(() => this.ping(), 20000);
+  },
+  ping() { if (S.conn === 'on' && document.visibilityState === 'visible') this.put('/ctl/live', {'.sv': 'timestamp'}).catch(() => {}); },
+  close() { if (this.es) { this.es.close(); this.es = null; } clearInterval(this.liveT); }
+};
+function setPath(o, parts, v) {
+  let x = o;
+  for (let i = 0; i < parts.length - 1; i++) { if (x[parts[i]] == null || typeof x[parts[i]] !== 'object') x[parts[i]] = {}; x = x[parts[i]]; }
+  const k = parts[parts.length - 1];
+  if (v === null) delete x[k]; else x[k] = v;
+}
+function applyPut(path, data) {
+  const p = path.split('/').filter(Boolean);
+  if (!p.length) { S.root = data && typeof data === 'object' ? data : {}; touched(['*']); return; }
+  setPath(S.root, p, data); touched([p[0]]);
+}
+function applyPatch(path, data) {
+  const p = path.split('/').filter(Boolean), tops = new Set();
+  for (const k in data || {}) { const sub = p.concat(k.split('/').filter(Boolean)); setPath(S.root, sub, data[k]); tops.add(sub[0]); }
+  touched([...tops]);
+}
+function arr(x) { return Array.isArray(x) ? x.filter(v => v != null) : x && typeof x === 'object' ? Object.values(x) : []; }
+function touched(keys) {
+  const all = keys.includes('*'), R = S.root;
+  const has = k => all || keys.includes(k);
+  if (has('sym')) { setSymbols(arr(R.sym)); if (!all) renderPairs(); }
+  if (has('q')) { S.q = R.q || {}; schedQuotes(); }
+  if (has('sr')) { S.sr = R.sr || {}; schedRows(); }
+  if (has('cal')) { setCal(arr(R.cal && R.cal.ev)); }
+  if (has('hb')) { S.hb = R.hb || null; }
+  if (has('scan')) { S.scan = R.scan || {}; if (FOPEN) FOPEN.refresh(); else if (S.tab === 'scan') renderScan(); schedRows(); }
+  if (has('fired')) { S.fired = R.fired || {}; renderAlertBadge(); }
+  if (has('log')) { const old = Object.keys(S.log).length; S.log = R.log || {}; const nw = Object.values(S.log); if (!all && nw.length > old) { const last = nw.sort((a, b) => (b.t || 0) - (a.t || 0))[0]; if (last) toast(last.m); } }
+  if (has('settings') && R.settings && !all) {
+    const inc = mergeSet(R.settings);
+    if (JSON.stringify(toFb(inc)) !== JSON.stringify(toFb(S.set))) { S.set = inc; LS.set('fxr.set', S.set); applyTheme(); renderAll(); }
+  }
+}
+function onFirstSnapshot() {
+  if (S.root.settings) { S.set = mergeSet(S.root.settings); LS.set('fxr.set', S.set); applyTheme(); }
+  resolveNames();
+  pushSettings();
+  FB.ping();
+  if (!S.sym.length) FB.put('/ctl/symreq', {'.sv': 'timestamp'}).catch(() => {});
+  renderAll();
+}
+function setSymbols(list) {
+  S.sym = list.filter(x => x && x.n); S.symMap = {};
+  S.sym.forEach(x => { S.symMap[x.n] = x; });
+  for (const k in CLS) delete CLS[k];
+  if (resolveNames()) save();
+}
+/* Đổi tên mặc định (vd XAUUSD) sang tên thật trên sàn (vd XAUUSDm) */
+function resolveNames() {
+  if (!S.sym.length) return false;
+  let changed = false;
+  const byBase = {};
+  S.sym.forEach(x => { const b = base(x.n); if (!byBase[b] || x.n.length < byBase[b].length) byBase[b] = x.n; });
+  const fix = n => { if (S.symMap[n]) return n; const m = byBase[base(n)]; if (m && m !== n) { changed = true; return m; } return n; };
+  S.set.lists.forEach(l => { l.s = [...new Set(l.s.map(fix))]; });
+  Object.values(S.set.alerts).forEach(a => { if (a.sym && a.sym !== '-') a.sym = fix(a.sym); });
+  return changed;
+}
+
+/* ---------- lịch ---------- */
+let CAL_BY = {};
+function setCal(ev) {
+  S.cal = ev.filter(e => e && e.t).map(e => Object.assign({}, e, {ms: e.t * 1000, i: +e.i || 1})).sort((a, b) => a.ms - b.ms);
+  CAL_BY = {};
+  S.cal.forEach(e => { (CAL_BY[e.c] = CAL_BY[e.c] || []).push(e); });
+  schedRows(); if (S.tab === 'cal') renderCal();
+}
+function newsFor(n) {
+  const now = Date.now(), N = S.set.news, after = N.after * 60000;
+  let best = null, hot = null;
+  for (const c of ccysOf(n)) for (const e of CAL_BY[c] || []) {
+    if (e.i < N.show && e.i < N.hl) continue;
+    if (e.ms + after < now) continue;
+    if (e.ms - now > 86400000) break;
+    if (e.i >= N.hl && e.ms - now <= N.before * 60000 && (!hot || e.i > hot.i)) hot = e;
+    if (!best || e.ms < best.ms || (e.ms === best.ms && e.i > best.i)) best = e;
+    if (e.ms > now + N.before * 60000) break;
+  }
+  return hot || best;
+}
+
+/* ---------- giao diện: tab cặp tiền ---------- */
+const ROWS = {};
+function renderLists() {
+  const el = $('#lists');
+  el.innerHTML = S.set.lists.map(l => `<button class="chip" type="button" aria-pressed="${l.n === S.set.active}" data-l="${esc(l.n)}">${esc(l.n)} <span class="mu">${l.s.length}</span></button>`).join('')
+    + `<button class="chip add" type="button" id="addList">+ Danh sách</button>`;
+  $$('[data-l]', el).forEach(b => b.onclick = () => { S.set.active = b.dataset.l; save(); renderPairs(); });
+  $('#addList').onclick = () => promptSheet('Danh sách mới', 'Tên danh sách', '', v => {
+    v = v.trim(); if (!v) return;
+    if (S.set.lists.some(l => l.n === v)) return toast('Đã có danh sách tên này');
+    S.set.lists.push({n: v, s: []}); S.set.active = v; save(); renderPairs(); openPicker();
+  });
+}
+function renderPairs() {
+  renderLists();
+  const L = curList();
+  $('#listInfo').textContent = L.s.length ? `${L.s.length} mã · chạm vào mã để xem chi tiết, đặt báo động` : '';
+  const box = $('#rows');
+  for (const k in ROWS) delete ROWS[k];
+  if (!L.s.length) {
+    box.innerHTML = `<div class="empty">Danh sách “${esc(L.n)}” chưa có mã nào.<br><button class="btn" type="button" id="emptyPick">Chọn mã</button></div>`;
+    $('#emptyPick').onclick = openPicker; return;
+  }
+  box.innerHTML = L.s.map(n => `<div class="row" role="button" tabindex="0" data-s="${esc(n)}">
+      <div class="r1"><span class="nm">${esc(base(n))}<span class="sfx">${esc(suffix(n))}</span></span>
+        <span class="bid num">—</span><span class="chg num mu">—</span></div>
+      <div class="r2"></div><div class="r3"></div><div class="fuse"><i></i></div></div>`).join('');
+  $$('.row', box).forEach(r => {
+    const n = r.dataset.s;
+    ROWS[n] = {el: r, bid: $('.bid', r), chg: $('.chg', r), r2: $('.r2', r), r3: $('.r3', r), fuse: $('.fuse', r), last: null, ev: null, srKey: ''};
+    r.onclick = () => openSymbol(n);
+    r.onkeydown = e => { if (e.key === 'Enter') openSymbol(n); };
+  });
+  updateQuotes(true); updateRows();
+}
+let qPending = false, rPending = false;
+function schedQuotes() { if (!qPending) { qPending = true; requestAnimationFrame(() => { qPending = false; updateQuotes(); }); } }
+function schedRows() { if (!rPending) { rPending = true; requestAnimationFrame(() => { rPending = false; updateRows(); }); } }
+const quote = n => S.q[fk(n)];
+function fmtPx(n, v) { const q = quote(n), i = symInfo(n); const d = q && q.d != null ? q.d : i ? i.d : 5; return (+v).toFixed(d); }
+function updateQuotes(force) {
+  for (const n in ROWS) {
+    const R = ROWS[n], q = quote(n);
+    if (!q || q.b == null) continue;
+    if (!force && R.last === q.b) continue;
+    if (R.last != null && q.b !== R.last) {
+      R.bid.classList.remove('fu', 'fd'); void R.bid.offsetWidth;
+      R.bid.classList.add(q.b > R.last ? 'fu' : 'fd');
+      clearTimeout(R.ft); R.ft = setTimeout(() => R.bid.classList.remove('fu', 'fd'), 450);
+    }
+    R.last = q.b;
+    R.bid.textContent = fmtPx(n, q.b);
+    if (q.o > 0) {
+      const c = (q.b - q.o) / q.o * 100;
+      R.chg.textContent = (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
+      R.chg.className = 'chg num ' + (c > 0 ? 'up' : c < 0 ? 'dn' : 'mu');
+    }
+  }
+  updateSR();
+}
+function srZones(n, tf) {
+  const z = S.sr[fk(n)] && S.sr[fk(n)][tf]; if (!z) return null;
+  const all = arr(z.r).concat(arr(z.s)).map(a => arr(a)).filter(a => a.length >= 2).map(a => ({lo: +a[0], hi: +a[1], c: +a[2] || 1}));
+  const q = quote(n); if (!q || q.b == null) return null;
+  const b = q.b;
+  let r = null, s = null;
+  for (const x of all) {
+    if (x.hi >= b && (x.lo > b || (b - x.lo) < (x.hi - b))) { if (!r || x.lo < r.lo) r = x; }
+    else if (x.lo <= b) { if (!s || x.hi > s.hi) s = x; }
+  }
+  return {r, s, b};
+}
+const srChip = (n, k, tf, p, d) => `<span class="sr ${k === 'KC' ? 'k' : 'h'}">${k} ${tf} <b>${fmtPx(n, p)}</b> ${d > 0 ? 'cách ' + fmtDist(n, d) : 'trong vùng'}</span>`;
+const zTxt = (n, x) => x.hi - x.lo > 0 ? fmtPx(n, x.lo) + '–' + fmtPx(n, x.hi) : fmtPx(n, x.lo);
+function updateSR() {
+  for (const n in ROWS) {
+    const R = ROWS[n]; const parts = [];
+    if (!S.set.sr.on) { const h = filterHits(n).map(f => `<span class="fm">✓ ${esc(f)}</span>`).join(''); if (h !== R.srKey) { R.r3.innerHTML = h; R.srKey = h; } continue; }
+    let nr = null, ns = null;
+    for (const tf of S.set.sr.tfs) {
+      const z = srZones(n, tf); if (!z) continue;
+      if (S.set.sr.all) {
+        if (z.r) parts.push(srChip(n, 'KC', tf, z.r.lo, z.r.lo - z.b));
+        if (z.s) parts.push(srChip(n, 'HT', tf, z.s.hi, z.b - z.s.hi));
+      } else {
+        if (z.r && (!nr || z.r.lo < nr.p)) nr = {tf, p: z.r.lo, d: z.r.lo - z.b};
+        if (z.s && (!ns || z.s.hi > ns.p)) ns = {tf, p: z.s.hi, d: z.b - z.s.hi};
+      }
+    }
+    if (nr) parts.push(srChip(n, 'KC', nr.tf, nr.p, nr.d));
+    if (ns) parts.push(srChip(n, 'HT', ns.tf, ns.p, ns.d));
+    filterHits(n).forEach(f => parts.unshift(`<span class="fm">✓ ${esc(f)}</span>`));
+    const h = parts.join('');
+    if (h !== R.srKey) { R.r3.innerHTML = h; R.srKey = h; }
+  }
+}
+function updateRows() {
+  const now = Date.now(), N = S.set.news;
+  for (const n in ROWS) {
+    const R = ROWS[n];
+    if (S.sym.length && !symInfo(n)) { if (R.ev !== 'x') { R.r2.innerHTML = '<span class="mu">Sàn của bạn không có mã này (chạm để bỏ khỏi danh sách).</span>'; R.ev = 'x'; } continue; }
+    const e = newsFor(n);
+    if (!e) { if (R.ev) { R.r2.innerHTML = ''; R.el.classList.remove('hot'); R.fuse.className = 'fuse'; R.fuse.firstChild.style.width = '0'; R.ev = null; } continue; }
+    if (R.ev !== e) {
+      R.r2.innerHTML = `<span class="imp i${e.i}">${IMP[e.i]}</span><span class="ev"><b>${esc(e.c)}</b> ${tVN(e.ms)} · ${esc(e.n)}</span><span class="cd"></span>`;
+      R.cdEl = $('.cd', R.r2); R.ev = e;
+    }
+    const dt = (e.ms - now) / 1000;
+    const hot = e.i >= N.hl && dt <= N.before * 60 && dt >= -N.after * 60;
+    R.el.classList.toggle('hot', hot);
+    R.cdEl.textContent = dt >= 0 ? 'còn ' + hms(dt) : 'vừa ra ' + hms(-dt);
+    R.fuse.className = 'fuse i' + e.i;
+    R.fuse.firstChild.style.width = (dt < 0 ? 100 : dt > 3600 ? 0 : (1 - dt / 3600) * 100) + '%';
+  }
+}
+
+/* ---------- tab lịch ---------- */
+function renderCalFilters() {
+  const C = S.set.cal;
+  const imp = [3, 2, 1].map(i => `<button class="chip" type="button" aria-pressed="${C.imps.includes(i)}" data-imp="${i}">${IMP[i]}</button>`).join('');
+  const past = [['dim', 'Tin đã qua: mờ'], ['show', 'rõ'], ['hide', 'ẩn']].map(([k, t]) => `<button class="chip" type="button" aria-pressed="${C.past === k}" data-past="${k}">${t}</button>`).join('');
+  $('#calFilters').innerHTML = `<div class="frow">${imp}<button class="chip" type="button" aria-pressed="${C.only}" id="calOnly">Chỉ tin của mã đang theo dõi</button></div><div class="frow">${past}</div>`;
+  $$('[data-imp]').forEach(b => b.onclick = () => { const i = +b.dataset.imp; C.imps = C.imps.includes(i) ? C.imps.filter(x => x !== i) : C.imps.concat(i); save(); renderCal(); });
+  $$('[data-past]').forEach(b => b.onclick = () => { C.past = b.dataset.past; save(); renderCal(); });
+  $('#calOnly').onclick = () => { C.only = !C.only; save(); renderCal(); };
+}
+let calNextMs = 0;
+function renderCal() {
+  renderCalFilters();
+  const C = S.set.cal, now = Date.now();
+  let cc = null;
+  if (C.only) { cc = new Set(); allWatch().forEach(n => ccysOf(n).forEach(c => cc.add(c))); }
+  const ev = S.cal.filter(e => C.imps.includes(e.i) && (!cc || cc.has(e.c)) && !(C.past === 'hide' && e.ms < now - 60000));
+  const box = $('#calList');
+  if (!S.cal.length) { box.innerHTML = `<div class="empty">${S.conn === 'on' || S.demo ? 'Chưa có dữ liệu lịch. EA gửi lịch mỗi 5 phút.' : 'Kết nối EA để xem lịch kinh tế.'}</div>`; return; }
+  if (!ev.length) { box.innerHTML = `<div class="empty">Không có tin nào khớp bộ lọc.</div>`; return; }
+  const next = ev.find(e => e.ms > now); calNextMs = next ? next.ms : 0;
+  const today = dayKey(now);
+  let h = '', d = '';
+  for (const e of ev) {
+    const k = dayKey(e.ms);
+    if (k !== d) { d = k; h += `<div class="dayh ${k === today ? 'today' : ''}">${k === today ? 'Hôm nay, ' : ''}${fD.format(e.ms)}</div>`; }
+    const past = e.ms < now;
+    h += `<button type="button" class="ce i${e.i} ${past ? 'past ' + (C.past === 'dim' ? 'dim' : '') : ''} ${e === next ? 'next' : ''}" data-id="${esc(e.id)}">
+      <span class="t">${tVN(e.ms)}</span><span class="c">${esc(e.c)}</span>
+      <span class="n"><span class="imp i${e.i}">${IMP[e.i]}</span> ${esc(e.n)}</span>
+      ${e === next ? `<span class="cdn" data-cd="${e.ms}">còn ${hms((e.ms - now) / 1000)}</span>` : ''}
+      ${(e.a || e.f || e.p) ? `<span class="v"><span>Thực tế <b>${esc(e.a || '—')}</b></span><span>Dự báo <b>${esc(e.f || '—')}</b></span><span>Trước <b>${esc(e.p || '—')}</b></span></span>` : ''}
+    </button>`;
+  }
+  box.innerHTML = h;
+  $$('.ce', box).forEach(b => b.onclick = () => openEvent(S.cal.find(e => String(e.id) === b.dataset.id)));
+  const t = $('.dayh.today') || null;
+  if (t && !renderCal.scrolled) { renderCal.scrolled = true; const nx = $('.ce.next', box) || t; setTimeout(() => window.scrollTo({top: Math.max(0, nx.getBoundingClientRect().top + window.scrollY - 160)}), 30); }
+}
+
+/* ===== ENGINE chỉ báo + logic lọc — © 2026 Lưu Khánh Tường – yeahhouse68@gmail.com =====
+   Dữ liệu nến D = {tf, t[], o[], h[], l[], c[], cache:{}} — chỉ số 0 = nến cũ nhất.
+   Toán hạng (operand) dạng "CHỈ_BÁO:tham_số,…:thành_phần", ví dụ "CCI:14:V", "STO:5,3,3:D", "NUM:-100:".
+   Kết quả 1 điều kiện: "ok;TF,ok,a,b;TF,ok,a,b" (ok = 1/0, "-" = thiếu dữ liệu). EA MQL5 dùng y hệt định dạng này. */
+const ENG = (() => {
+  const ok = x => typeof x === 'number' && isFinite(x);
+  const NA = n => new Array(n).fill(NaN);
+  function firstValid(a) { for (let i = 0; i < a.length; i++) if (ok(a[i])) return i; return -1; }
+  function ema(src, p) {
+    const n = src.length, o = NA(n), pr = 2 / (p + 1), f = firstValid(src);
+    if (f < 0) return o;
+    o[f] = src[f];
+    for (let i = f + 1; i < n; i++) o[i] = ok(src[i]) ? src[i] * pr + o[i - 1] * (1 - pr) : o[i - 1];
+    return o;
+  }
+  function sma(src, p) {
+    const n = src.length, o = NA(n); let s = 0, c = 0;
+    for (let i = 0; i < n; i++) {
+      if (!ok(src[i])) { s = 0; c = 0; continue; }
+      s += src[i]; c++;
+      if (c > p) { s -= src[i - p]; c = p; }
+      if (c === p) o[i] = s / p;
+    }
+    return o;
+  }
+  const hh = (a, i, p) => { let m = -Infinity; for (let j = i - p + 1; j <= i; j++) if (a[j] > m) m = a[j]; return m; };
+  const ll = (a, i, p) => { let m = Infinity; for (let j = i - p + 1; j <= i; j++) if (a[j] < m) m = a[j]; return m; };
+  function cci(D, p) {
+    const n = D.c.length, tp = D.c.map((c, i) => (D.h[i] + D.l[i] + c) / 3), sp = sma(tp, p), o = NA(n);
+    for (let i = 0; i < n; i++) {
+      if (!ok(sp[i])) continue;
+      let d = 0; for (let j = i - p + 1; j <= i; j++) d += Math.abs(tp[j] - sp[i]);
+      d /= p; o[i] = d ? (tp[i] - sp[i]) / (0.015 * d) : 0;
+    }
+    return o;
+  }
+  function stoch(D, k, dp, sl) {
+    const n = D.c.length, L = NA(n), H = NA(n), m = NA(n);
+    for (let i = k - 1; i < n; i++) { L[i] = ll(D.l, i, k); H[i] = hh(D.h, i, k); }
+    for (let i = k - 1 + sl - 1; i < n; i++) {
+      let a = 0, b = 0;
+      for (let j = i - sl + 1; j <= i; j++) { a += D.c[j] - L[j]; b += H[j] - L[j]; }
+      m[i] = b === 0 ? 100 : a / b * 100;
+    }
+    return {K: m, D: sma(m, dp)};
+  }
+  function rsi(c, p) {
+    const n = c.length, o = NA(n); if (n <= p) return o;
+    let sp = 0, sn = 0;
+    for (let i = 1; i <= p; i++) { const d = c[i] - c[i - 1]; sp += d > 0 ? d : 0; sn += d < 0 ? -d : 0; }
+    sp /= p; sn /= p;
+    const val = () => sn !== 0 ? 100 - 100 / (1 + sp / sn) : (sp !== 0 ? 100 : 50);
+    o[p] = val();
+    for (let i = p + 1; i < n; i++) { const d = c[i] - c[i - 1]; sp = (sp * (p - 1) + (d > 0 ? d : 0)) / p; sn = (sn * (p - 1) + (d < 0 ? -d : 0)) / p; o[i] = val(); }
+    return o;
+  }
+  function macd(c, f, s, g) {
+    const ef = ema(c, f), es = ema(c, s), m = ef.map((v, i) => v - es[i]), sg = sma(m, g);
+    return {M: m, S: sg, H: m.map((v, i) => ok(sg[i]) ? v - sg[i] : NaN)};
+  }
+  function bb(c, p, dev) {
+    const n = c.length, mid = sma(c, p), U = NA(n), L = NA(n);
+    for (let i = 0; i < n; i++) {
+      if (!ok(mid[i])) continue;
+      let s = 0; for (let j = i - p + 1; j <= i; j++) s += (c[j] - mid[i]) ** 2;
+      const sd = Math.sqrt(s / p); U[i] = mid[i] + dev * sd; L[i] = mid[i] - dev * sd;
+    }
+    return {U, M: mid, L, W: U.map((u, i) => u - L[i]), PB: c.map((x, i) => ok(U[i]) && U[i] !== L[i] ? (x - L[i]) / (U[i] - L[i]) * 100 : NaN)};
+  }
+  const trS = D => D.c.map((c, i) => i === 0 ? D.h[0] - D.l[0] : Math.max(D.h[i], D.c[i - 1]) - Math.min(D.l[i], D.c[i - 1]));
+  function adx(D, p) {
+    const n = D.c.length, pr = 2 / (p + 1), P = NA(n), N = NA(n), A = NA(n);
+    if (n < 2) return {ADX: A, PDI: P, NDI: N};
+    P[0] = 0; N[0] = 0; A[0] = 0;
+    for (let i = 1; i < n; i++) {
+      let up = D.h[i] - D.h[i - 1], dn = D.l[i - 1] - D.l[i];
+      if (up < 0) up = 0; if (dn < 0) dn = 0;
+      if (up > dn) dn = 0; else if (up < dn) up = 0; else { up = 0; dn = 0; }
+      const t = Math.max(Math.abs(D.h[i] - D.l[i]), Math.abs(D.h[i] - D.c[i - 1]), Math.abs(D.l[i] - D.c[i - 1]));
+      const pd = t ? 100 * up / t : 0, nd = t ? 100 * dn / t : 0;
+      P[i] = pd * pr + P[i - 1] * (1 - pr); N[i] = nd * pr + N[i - 1] * (1 - pr);
+      const s = P[i] + N[i], x = s ? 100 * Math.abs((P[i] - N[i]) / s) : 0;
+      A[i] = x * pr + A[i - 1] * (1 - pr);
+    }
+    return {ADX: A, PDI: P, NDI: N};
+  }
+  function ich(D, t, k, b) {
+    const n = D.c.length, T = NA(n), K = NA(n), SAc = NA(n), SBc = NA(n), SA = NA(n), SB = NA(n), CT = NA(n), CB = NA(n), CHI = NA(n);
+    for (let i = 0; i < n; i++) {
+      if (i >= t - 1) T[i] = (hh(D.h, i, t) + ll(D.l, i, t)) / 2;
+      if (i >= k - 1) K[i] = (hh(D.h, i, k) + ll(D.l, i, k)) / 2;
+      if (ok(T[i]) && ok(K[i])) SAc[i] = (T[i] + K[i]) / 2;
+      if (i >= b - 1) SBc[i] = (hh(D.h, i, b) + ll(D.l, i, b)) / 2;
+      if (i >= k) { SA[i] = SAc[i - k]; SB[i] = SBc[i - k]; CHI[i] = D.c[i] - D.c[i - k]; }
+      if (ok(SA[i]) && ok(SB[i])) { CT[i] = Math.max(SA[i], SB[i]); CB[i] = Math.min(SA[i], SB[i]); }
+    }
+    return {TEN: T, KIJ: K, SA, SB, SAF: SAc, SBF: SBc, CT, CB, CHI};
+  }
+  function sar(D, step, mx) {
+    const n = D.c.length, o = NA(n); if (n < 3) return o;
+    let up = D.c[1] >= D.c[0], af = step;
+    let ep = up ? Math.max(D.h[0], D.h[1]) : Math.min(D.l[0], D.l[1]);
+    let s = up ? Math.min(D.l[0], D.l[1]) : Math.max(D.h[0], D.h[1]);
+    o[1] = s;
+    for (let i = 2; i < n; i++) {
+      s = s + af * (ep - s);
+      if (up) {
+        s = Math.min(s, D.l[i - 1], D.l[i - 2]);
+        if (D.l[i] < s) { up = false; s = ep; ep = D.l[i]; af = step; }
+        else if (D.h[i] > ep) { ep = D.h[i]; af = Math.min(af + step, mx); }
+      } else {
+        s = Math.max(s, D.h[i - 1], D.h[i - 2]);
+        if (D.h[i] > s) { up = true; s = ep; ep = D.h[i]; af = step; }
+        else if (D.l[i] < ep) { ep = D.l[i]; af = Math.min(af + step, mx); }
+      }
+      o[i] = s;
+    }
+    return o;
+  }
+  function piv(H) {
+    const i = H.c.length - 2; if (i < 0) return {};
+    const h = H.h[i], l = H.l[i], c = H.c[i], P = (h + l + c) / 3;
+    return {P, R1: 2 * P - l, S1: 2 * P - h, R2: P + (h - l), S2: P - (h - l), R3: h + 2 * (P - l), S3: l - 2 * (h - P)};
+  }
+  /* Hỗ trợ/kháng cự: đỉnh/đáy swing (3 nến mỗi bên) trên các nến đã đóng, gom vùng theo 0.35×ATR14 */
+  function srZones(D, look) {
+    const n = D.c.length, e = n - 1, st = Math.max(1, e - look);
+    if (e - st < 30) return [];
+    let a = 0; const an = 14;
+    for (let i = e - an; i < e; i++) a += Math.max(D.h[i], D.c[i - 1]) - Math.min(D.l[i], D.c[i - 1]);
+    const tol = a / an * 0.35, K = 3, pv = [];
+    if (!(tol > 0)) return [];
+    for (let i = st + K; i < e - K; i++) {
+      let ph = true, pl = true;
+      for (let j = 1; j <= K; j++) {
+        if (D.h[i] <= D.h[i + j] || D.h[i] < D.h[i - j]) ph = false;
+        if (D.l[i] >= D.l[i + j] || D.l[i] > D.l[i - j]) pl = false;
+      }
+      if (ph) pv.push(D.h[i]); if (pl) pv.push(D.l[i]);
+    }
+    pv.sort((x, y) => x - y);
+    const z = [];
+    for (const p of pv) {
+      const last = z[z.length - 1];
+      if (last && p - last.hi <= tol && p - last.lo <= 2 * tol) { last.hi = p; last.c++; }
+      else z.push({lo: p, hi: p, c: 1});
+    }
+    return z;
+  }
+  function srNear(D, look, price) {
+    let R = NaN, S = NaN;
+    for (const z of srZones(D, look)) {
+      if ((z.lo + z.hi) / 2 >= price) { if (!ok(R) || z.lo < R) R = z.lo; }
+      else if (!ok(S) || z.hi > S) S = z.hi;
+    }
+    return {R, S};
+  }
+  /* Phân kỳ: 2 đáy (hoặc 2 đỉnh) swing gần nhất của giá trong `look` nến, đáy/đỉnh mới nhất cách nến xét tối đa `fresh` nến */
+  function diverg(D, A, i, look, fresh, kind) {
+    const K = 2, lo = Math.max(K, i - look), low = kind === 'DIVB' || kind === 'HDIVB', pv = [];
+    for (let j = i - K; j >= lo && pv.length < 2; j--) {
+      let p = true;
+      for (let m = 1; m <= K; m++) {
+        if (low) { if (!(D.l[j] <= D.l[j - m] && D.l[j] < D.l[j + m])) { p = false; break; } }
+        else if (!(D.h[j] >= D.h[j - m] && D.h[j] > D.h[j + m])) { p = false; break; }
+      }
+      if (p && ok(A[j])) pv.push(j);
+    }
+    if (pv.length < 2) return false;
+    const [p2, p1] = pv;
+    if (i - p2 > fresh + K) return false;
+    if (kind === 'DIVB') return D.l[p2] < D.l[p1] && A[p2] > A[p1];
+    if (kind === 'HDIVB') return D.l[p2] > D.l[p1] && A[p2] < A[p1];
+    if (kind === 'DIVS') return D.h[p2] > D.h[p1] && A[p2] < A[p1];
+    if (kind === 'HDIVS') return D.h[p2] < D.h[p1] && A[p2] > A[p1];
+    return false;
+  }
+  const ribP = ps => ps.split(',').map(Number).filter(x => x > 0).sort((a, b) => a - b);
+  function operand(D, op, ctx, sym) {
+    if (D.cache[op]) return D.cache[op];
+    const [ind, ps = '', comp = ''] = String(op).split(':');
+    const P = ps.split(',').map(Number), n = D.c.length, fill = v => new Array(n).fill(v);
+    let out;
+    switch (ind) {
+      case 'NUM': out = fill(parseFloat(ps)); break;
+      case 'PX': out = comp === 'O' ? D.o : comp === 'H' ? D.h : comp === 'L' ? D.l : comp === 'BODY' ? D.c.map((c, i) => c - D.o[i]) : D.c; break;
+      case 'EMA': out = ema(D.c, P[0] || 9); break;
+      case 'SMA': out = sma(D.c, P[0] || 20); break;
+      case 'RIB': {
+        const es = ribP(ps).map(p => operand(D, 'EMA:' + p + ':V', ctx, sym));
+        if (!es.length) { out = fill(NaN); break; }
+        const mx = D.c.map((_, i) => Math.max(...es.map(e => e[i]))), mn = D.c.map((_, i) => Math.min(...es.map(e => e[i])));
+        out = comp === 'MIN' ? mn : comp === 'F' ? es[0] : comp === 'S' ? es[es.length - 1] : comp === 'W' ? mx.map((v, i) => v - mn[i]) : mx;
+        break;
+      }
+      case 'BB': out = bb(D.c, P[0] || 20, P[1] || 2)[comp || 'M']; break;
+      case 'CCI': out = cci(D, P[0] || 14); break;
+      case 'STO': out = stoch(D, P[0] || 5, P[1] || 3, P[2] || 3)[comp === 'D' ? 'D' : 'K']; break;
+      case 'RSI': out = rsi(D.c, P[0] || 14); break;
+      case 'MACD': out = macd(D.c, P[0] || 12, P[1] || 26, P[2] || 9)[comp || 'M']; break;
+      case 'ADX': out = adx(D, P[0] || 14)[comp || 'ADX']; break;
+      case 'ICH': out = ich(D, P[0] || 9, P[1] || 26, P[2] || 52)[comp || 'TEN']; break;
+      case 'ATR': out = sma(trS(D), P[0] || 14); break;
+      case 'SAR': out = sar(D, P[0] || 0.02, P[1] || 0.2); break;
+      case 'PIV': { const H = ctx.data(sym, ps === 'W' ? 'W1' : 'D1'); const v = H ? piv(H)[comp || 'P'] : NaN; out = fill(ok(v) ? v : NaN); break; }
+      case 'SR': { const r = srNear(D, ctx.srBars(D.tf), D.c[n - 1]); out = fill(comp === 'S' ? r.S : r.R); break; }
+      default: out = fill(NaN);
+    }
+    if (!out) out = fill(NaN);
+    return (D.cache[op] = out);
+  }
+  function cmpAt(cmp, A, B, i, n1, n2, D, pip) {
+    const a = A[i], b = B ? B[i] : NaN, k1 = Math.max(1, Math.round(n1) || 1), k2 = Math.max(1, Math.round(n2) || 1);
+    switch (cmp) {
+      case 'GT': return ok(a) && ok(b) && a > b;
+      case 'LT': return ok(a) && ok(b) && a < b;
+      case 'CU': case 'CD':
+        for (let j = 0; j < k1; j++) {
+          const k = i - j; if (k < 1) break;
+          if (!(ok(A[k - 1]) && ok(B[k - 1]) && ok(A[k]) && ok(B[k]))) continue;
+          if (cmp === 'CU' ? A[k - 1] <= B[k - 1] && A[k] > B[k] : A[k - 1] >= B[k - 1] && A[k] < B[k]) return true;
+        }
+        return false;
+      case 'CUA': case 'CDA': {
+        const up = cmp === 'CUA';
+        if (!(ok(a) && ok(b) && (up ? a > b : a < b))) return false;
+        for (let j = 1; j <= k1; j++) { const k = i - j; if (k < 0 || !ok(A[k]) || !ok(B[k]) || (up ? A[k] >= B[k] : A[k] <= B[k])) return false; }
+        return true;
+      }
+      case 'IN': return ok(a) && a >= Math.min(n1, n2) && a <= Math.max(n1, n2);
+      case 'OUT': return ok(a) && (a < Math.min(n1, n2) || a > Math.max(n1, n2));
+      case 'RISE': case 'FALL':
+        for (let j = 0; j < k1; j++) { const k = i - j; if (k < 1 || !ok(A[k]) || !ok(A[k - 1]) || !(cmp === 'RISE' ? A[k] > A[k - 1] : A[k] < A[k - 1])) return false; }
+        return true;
+      case 'TUP': case 'TDN': {
+        const up = cmp === 'TUP';
+        for (let j = 0; j < k2; j++) { const k = i - j; if (k < 1 || !ok(A[k]) || !ok(A[k - 1]) || !(up ? A[k] > A[k - 1] : A[k] < A[k - 1])) return false; }
+        for (let j = k2; j < k2 + k1; j++) { const k = i - j; if (k < 1 || !ok(A[k]) || !ok(A[k - 1]) || !(up ? A[k] < A[k - 1] : A[k] > A[k - 1])) return false; }
+        return true;
+      }
+      case 'NEAR': return ok(a) && ok(b) && Math.abs(a - b) <= n1 * pip;
+      case 'DIVB': case 'DIVS': case 'HDIVB': case 'HDIVS': return diverg(D, A, i, Math.round(n1) || 40, Math.round(n2) || 5, cmp);
+    }
+    return false;
+  }
+  const NEED_B = {GT: 1, LT: 1, CU: 1, CD: 1, CUA: 1, CDA: 1, NEAR: 1};
+  const num = x => ok(x) ? String(+x.toPrecision(6)) : '';
+  function evalCond(c, sym, F, ctx, res) {
+    const tfs = c.tfs && c.tfs.length ? c.tfs : ['H1'], parts = [];
+    let any = false, all = true, have = false;
+    for (const tf of tfs) {
+      const D = ctx.data(sym, tf);
+      if (!D || D.c.length < 60) { parts.push(tf + ',-,,'); all = false; continue; }
+      const i = D.c.length - 1 - (F.bar ? 1 : 0);
+      let r = false, a = NaN, b = NaN;
+      if (c.cmp === 'STKU' || c.cmp === 'STKD') {
+        const ps = ribP(String(c.L).split(':')[1] || '');
+        const es = ps.map(p => operand(D, 'EMA:' + p + ':V', ctx, sym));
+        r = es.length >= 2 && es.every((e, j) => j === 0 || (ok(e[i]) && ok(es[j - 1][i]) && (c.cmp === 'STKU' ? es[j - 1][i] > e[i] : es[j - 1][i] < e[i])));
+        a = es.length ? es[0][i] : NaN; b = es.length ? es[es.length - 1][i] : NaN;
+      } else {
+        const A = operand(D, c.L, ctx, sym), B = NEED_B[c.cmp] ? operand(D, c.R || 'NUM:0:', ctx, sym) : null;
+        r = cmpAt(c.cmp, A, B, i, +c.n1, +c.n2, D, ctx.pip(sym));
+        a = A[i]; b = B ? B[i] : NaN;
+      }
+      have = true; any = any || r; all = all && r;
+      parts.push(tf + ',' + (r ? 1 : 0) + ',' + num(a) + ',' + num(b));
+    }
+    const v = have && (c.tm === 'O' ? any : all) ? 1 : 0;
+    res.c[c.id] = (have ? v : '-') + ';' + parts.join(';');
+    return v;
+  }
+  function evalGroup(G, sym, F, ctx, res) {
+    if (!G || G.on === false) return -1;
+    let seen = 0, val = G.op !== 'O';
+    for (const it of G.items || []) {
+      let r;
+      if (it.k === 'g') { r = evalGroup(it, sym, F, ctx, res); if (r < 0) continue; }
+      else { if (it.on === false) continue; r = evalCond(it, sym, F, ctx, res); }
+      seen++; val = G.op === 'O' ? (val || r === 1) : (val && r === 1);
+    }
+    return seen ? (val ? 1 : 0) : -1;
+  }
+  function evalFilter(F, syms, ctx, key) {
+    const out = {t: Math.floor(Date.now() / 1000), r: {}};
+    for (const s of syms) {
+      const res = {m: 0, c: {}};
+      res.m = evalGroup(F.root, s, F, ctx, res) === 1 ? 1 : 0;
+      out.r[key(s)] = res;
+    }
+    return out;
+  }
+  return {ema, sma, cci, stoch, rsi, macd, bb, adx, ich, sar, piv, srZones, srNear, diverg, operand, cmpAt, evalFilter, evalGroup, ok};
+})();
+
+
+/* ---------- BỘ LỌC: định nghĩa chỉ báo & phép so ---------- */
+const IND = {
+  PX:   {n: 'Giá', p: [], c: {C: 'Giá đóng cửa', O: 'Giá mở cửa', H: 'Giá cao nhất', L: 'Giá thấp nhất', BODY: 'Thân nến (đóng − mở)'}},
+  EMA:  {n: 'EMA', p: [['Chu kỳ', 9]], c: {V: ''}},
+  SMA:  {n: 'SMA', p: [['Chu kỳ', 20]], c: {V: ''}},
+  RIB:  {n: 'Chùm EMA', p: [['Các chu kỳ', '9,21,50']], c: {MAX: 'đỉnh chùm', MIN: 'đáy chùm', F: 'EMA nhanh nhất', S: 'EMA chậm nhất', W: 'độ rộng chùm'}},
+  BB:   {n: 'Bollinger', p: [['Chu kỳ', 20], ['Độ lệch', 2]], c: {U: 'dải trên', M: 'dải giữa', L: 'dải dưới', W: 'độ rộng dải', PB: '%B'}},
+  CCI:  {n: 'CCI', p: [['Chu kỳ', 14]], c: {V: ''}},
+  STO:  {n: 'Stoch', p: [['%K', 5], ['%D', 3], ['Slowing', 3]], c: {K: '%K', D: '%D'}},
+  RSI:  {n: 'RSI', p: [['Chu kỳ', 14]], c: {V: ''}},
+  MACD: {n: 'MACD', p: [['Nhanh', 12], ['Chậm', 26], ['Signal', 9]], c: {M: 'đường MACD', S: 'Signal', H: 'Histogram'}},
+  ADX:  {n: 'ADX', p: [['Chu kỳ', 14]], c: {ADX: 'ADX', PDI: '+DI', NDI: '−DI'}},
+  ICH:  {n: 'Ichimoku', p: [['Tenkan', 9], ['Kijun', 26], ['Senkou B', 52]], c: {TEN: 'Tenkan', KIJ: 'Kijun', CT: 'đỉnh mây', CB: 'đáy mây', SA: 'Senkou A', SB: 'Senkou B', SAF: 'Senkou A tương lai', SBF: 'Senkou B tương lai', CHI: 'Chikou (giá − giá 26 nến trước)'}},
+  ATR:  {n: 'ATR', p: [['Chu kỳ', 14]], c: {V: ''}},
+  SAR:  {n: 'Parabolic SAR', p: [['Bước', 0.02], ['Tối đa', 0.2]], c: {V: ''}},
+  PIV:  {n: 'Pivot', p: [['D = ngày, W = tuần', 'D']], c: {P: 'P', R1: 'R1', R2: 'R2', R3: 'R3', S1: 'S1', S2: 'S2', S3: 'S3'}},
+  SR:   {n: 'Hỗ trợ/kháng cự', p: [], c: {R: 'Kháng cự gần nhất', S: 'Hỗ trợ gần nhất'}}
+};
+const CMP = {
+  GT:   {t: 'lớn hơn', B: 1, h: 'Đúng khi đường A nằm trên B ở nến đang xét.'},
+  LT:   {t: 'nhỏ hơn', B: 1, h: 'Đúng khi đường A nằm dưới B ở nến đang xét.'},
+  CU:   {t: 'cắt lên', B: 1, n1: ['Trong bao nhiêu nến gần nhất', 1], h: 'A từ dưới vượt lên trên B.'},
+  CD:   {t: 'cắt xuống', B: 1, n1: ['Trong bao nhiêu nến gần nhất', 1], h: 'A từ trên đi xuống dưới B.'},
+  CUA:  {t: 'cắt lên sau khi nằm dưới', B: 1, n1: ['Đã nằm dưới ít nhất (nến)', 5], h: 'Nến đang xét nằm trên B, các nến trước đó nằm dưới B liên tục.'},
+  CDA:  {t: 'cắt xuống sau khi nằm trên', B: 1, n1: ['Đã nằm trên ít nhất (nến)', 5], h: 'Nến đang xét nằm dưới B, các nến trước đó nằm trên B liên tục.'},
+  IN:   {t: 'nằm trong vùng', n1: ['Từ', -100], n2: ['Đến', 100], h: 'Giá trị của A nằm giữa 2 số.'},
+  OUT:  {t: 'nằm ngoài vùng', n1: ['Từ', -100], n2: ['Đến', 100], h: 'Giá trị của A ở ngoài khoảng 2 số.'},
+  RISE: {t: 'tăng liên tục', n1: ['Số nến', 3], h: 'A tăng nến sau cao hơn nến trước, liên tục N nến.'},
+  FALL: {t: 'giảm liên tục', n1: ['Số nến', 3], h: 'A giảm liên tục N nến.'},
+  TUP:  {t: 'đảo chiều lên', n1: ['Đã giảm ít nhất (nến)', 3], n2: ['Rồi tăng (nến)', 1], h: 'A đã giảm trước đó và đang hồi lên. Ví dụ CCI giảm 3 nến rồi tăng 1 nến.'},
+  TDN:  {t: 'đảo chiều xuống', n1: ['Đã tăng ít nhất (nến)', 3], n2: ['Rồi giảm (nến)', 1], h: 'A đã tăng trước đó và đang quay xuống.'},
+  NEAR: {t: 'cách không quá', B: 1, n1: ['Khoảng cách (pip/giá theo định nghĩa của mã)', 5], h: 'Khoảng cách giữa A và B nhỏ hơn hoặc bằng X. Vàng: 1 giá = 1 USD.'},
+  DIVB: {t: 'phân kỳ tăng với giá', n1: ['Tìm trong (nến)', 40], n2: ['Đáy mới nhất cách tối đa (nến)', 5], h: 'Giá tạo đáy thấp hơn nhưng chỉ báo tạo đáy cao hơn.'},
+  DIVS: {t: 'phân kỳ giảm với giá', n1: ['Tìm trong (nến)', 40], n2: ['Đỉnh mới nhất cách tối đa (nến)', 5], h: 'Giá tạo đỉnh cao hơn nhưng chỉ báo tạo đỉnh thấp hơn.'},
+  HDIVB: {t: 'phân kỳ ẩn tăng', n1: ['Tìm trong (nến)', 40], n2: ['Đáy mới nhất cách tối đa (nến)', 5], h: 'Giá tạo đáy cao hơn, chỉ báo tạo đáy thấp hơn (xu hướng tăng tiếp diễn).'},
+  HDIVS: {t: 'phân kỳ ẩn giảm', n1: ['Tìm trong (nến)', 40], n2: ['Đỉnh mới nhất cách tối đa (nến)', 5], h: 'Giá tạo đỉnh thấp hơn, chỉ báo tạo đỉnh cao hơn (xu hướng giảm tiếp diễn).'},
+  STKU: {t: 'xếp thứ tự tăng', rib: 1, h: 'EMA nhanh nằm trên EMA chậm theo đúng thứ tự (ví dụ 9 > 21 > 50).'},
+  STKD: {t: 'xếp thứ tự giảm', rib: 1, h: 'EMA nhanh nằm dưới EMA chậm theo đúng thứ tự.'}
+};
+const TF_STD = ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M10', 'M12', 'M15', 'M20', 'M30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'H12', 'D1', 'W1', 'MN1'];
+const TF_QUICK = ['M5', 'M15', 'M30', 'H1', 'H4', 'D1', 'W1'];
+function tfMin(tf) { if (tf === 'MN1') return 43200; const m = /^([MHDW])(\d+)$/.exec(tf); if (!m) return 0; return +m[2] * ({M: 1, H: 60, D: 1440, W: 10080}[m[1]]); }
+function tfValid(tf) { if (TF_STD.includes(tf)) return true; const m = /^([MH])(\d{1,4})$/.exec(tf); if (!m) return false; const x = tfMin(tf); return x >= 2 && x < 1440; }
+const fmtN = v => { const x = +v; return isFinite(x) ? String(+x.toPrecision(6)).replace('-', '−') : String(v ?? ''); };
+function opParse(op) { const [ind = 'CCI', ps = '', comp = ''] = String(op || '').split(':'); return {ind, ps: ps === '' ? [] : ps.split(','), comp}; }
+function opStr(o) { return o.ind + ':' + o.ps.join(',') + ':' + o.comp; }
+function opDefault(ind) { const d = IND[ind]; return {ind, ps: d.p.map(p => String(p[1])), comp: Object.keys(d.c)[0]}; }
+function opLabel(op, noComp) {
+  const o = opParse(op), d = IND[o.ind];
+  if (o.ind === 'NUM') return fmtN(o.ps.join(','));
+  if (!d) return op;
+  if (o.ind === 'PX' || o.ind === 'SR') return d.c[o.comp] || d.n;
+  if (o.ind === 'PIV') return 'Pivot ' + (o.ps[0] === 'W' ? 'tuần' : 'ngày') + ' ' + o.comp;
+  const name = d.n + (o.ps.length ? '(' + o.ps.join(',') + ')' : '');
+  const cl = d.c[o.comp];
+  return name + (cl && !noComp ? ' ' + cl : '');
+}
+function tfText(c) { const t = c.tfs || []; return t.length > 1 ? t.join('·') + (c.tm === 'O' ? ' (bất kỳ khung)' : ' (mọi khung)') : (t[0] || ''); }
+function condText(c) {
+  const A = opLabel(c.L, c.cmp === 'STKU' || c.cmp === 'STKD'), tf = tfText(c), B = c.R ? opLabel(c.R) : '', n1 = fmtN(c.n1), n2 = fmtN(c.n2);
+  switch (c.cmp) {
+    case 'GT': return `${A} ${tf} > ${B}`;
+    case 'LT': return `${A} ${tf} < ${B}`;
+    case 'CU': return `${A} ${tf} cắt lên ${B}` + (c.n1 > 1 ? ` trong ${n1} nến` : '');
+    case 'CD': return `${A} ${tf} cắt xuống ${B}` + (c.n1 > 1 ? ` trong ${n1} nến` : '');
+    case 'CUA': return `${A} ${tf} cắt lên ${B} sau ≥ ${n1} nến nằm dưới`;
+    case 'CDA': return `${A} ${tf} cắt xuống ${B} sau ≥ ${n1} nến nằm trên`;
+    case 'IN': return `${A} ${tf} trong vùng ${n1} đến ${n2}`;
+    case 'OUT': return `${A} ${tf} ngoài vùng ${n1} đến ${n2}`;
+    case 'RISE': return `${A} ${tf} tăng ${n1} nến liên tục`;
+    case 'FALL': return `${A} ${tf} giảm ${n1} nến liên tục`;
+    case 'TUP': return `${A} ${tf} đảo chiều lên (giảm ≥ ${n1} nến rồi tăng ${n2} nến)`;
+    case 'TDN': return `${A} ${tf} đảo chiều xuống (tăng ≥ ${n1} nến rồi giảm ${n2} nến)`;
+    case 'NEAR': return `${A} ${tf} cách ${B} ≤ ${n1} pip/giá`;
+    case 'DIVB': return `Phân kỳ tăng giữa giá và ${A} ${tf}`;
+    case 'DIVS': return `Phân kỳ giảm giữa giá và ${A} ${tf}`;
+    case 'HDIVB': return `Phân kỳ ẩn tăng giữa giá và ${A} ${tf}`;
+    case 'HDIVS': return `Phân kỳ ẩn giảm giữa giá và ${A} ${tf}`;
+    case 'STKU': return `${A} ${tf} xếp tăng (nhanh trên chậm)`;
+    case 'STKD': return `${A} ${tf} xếp giảm (nhanh dưới chậm)`;
+  }
+  return A;
+}
+/* ---------- BỘ LỌC: dữ liệu ---------- */
+function newCond(o) { return Object.assign({k: 'c', id: uid(), on: true, L: 'CCI:14:V', cmp: 'LT', R: 'NUM:-100:', n1: 0, n2: 0, tfs: ['H4'], tm: 'A'}, o || {}); }
+function newGroup(op, items) { return {k: 'g', id: uid(), on: true, op: op || 'A', items: items || []}; }
+function normTree(g) {
+  if (!g || typeof g !== 'object') return newGroup('A');
+  g.k = 'g'; g.id = g.id || uid(); g.op = g.op === 'O' ? 'O' : 'A'; g.on = g.on !== false;
+  g.items = arr(g.items).map(it => {
+    if (it && it.k === 'g') return normTree(it);
+    if (!it) return null;
+    it.k = 'c'; it.on = it.on !== false; it.tfs = Array.isArray(it.tfs) ? it.tfs : String(it.tfs || 'H1').split(',').filter(Boolean);
+    it.tm = it.tm === 'O' ? 'O' : 'A'; it.n1 = +it.n1 || 0; it.n2 = +it.n2 || 0; return it;
+  }).filter(Boolean);
+  return g;
+}
+function normFilter(F) {
+  F.root = normTree(F.root); F.on = F.on !== false; F.alert = !!F.alert; F.bar = F.bar === 0 ? 0 : 1;
+  F.scope = arr(F.scope); if (!F.scope.length) F.scope = ['*'];
+  F.amode = F.amode || 'B'; F.atf = F.atf || 'H1'; F.acool = +F.acool || 30; return F;
+}
+function findNode(g, id) {
+  for (const it of g.items || []) { if (it.id === id) return {node: it, parent: g}; if (it.k === 'g') { const r = findNode(it, id); if (r) return r; } }
+  return null;
+}
+function eachCond(g, fn) { for (const it of g.items || []) { if (it.k === 'g') eachCond(it, fn); else fn(it, g); } }
+function scopeSyms(F) {
+  if (!F.scope || F.scope.includes('*')) return allWatch().filter(n => !S.sym.length || symInfo(n));
+  const w = new Set(); S.set.lists.filter(l => F.scope.includes(l.n)).forEach(l => l.s.forEach(x => w.add(x)));
+  return [...w].filter(n => !S.sym.length || symInfo(n));
+}
+function tplFilters() {
+  const C = (L, cmp, R, tfs, x) => newCond(Object.assign({L, cmp, R, tfs}, x || {}));
+  return [
+    {name: 'Vàng canh hồi', root: newGroup('A', [
+      newGroup('O', [C('CCI:14:V', 'LT', 'NUM:-100:', ['D1']), C('CCI:14:V', 'DIVB', '', ['D1'], {n1: 40, n2: 5})]),
+      newGroup('O', [C('CCI:14:V', 'LT', 'NUM:-100:', ['H4']), C('CCI:14:V', 'DIVB', '', ['H4'], {n1: 40, n2: 5})]),
+      C('PX::C', 'CUA', 'EMA:9:V', ['H4'], {n1: 5})])},
+    {name: 'Đồng thuận tăng H1–H4', root: newGroup('A', [C('MACD:12,26,9:M', 'GT', 'NUM:0:', ['H1']), C('STO:5,3,3:D', 'GT', 'NUM:60:', ['H1']), C('CCI:14:V', 'GT', 'NUM:70:', ['H4'])])},
+    {name: 'Giá sát hỗ trợ/kháng cự H4', root: newGroup('O', [C('PX::C', 'NEAR', 'SR::R', ['H4'], {n1: 5}), C('PX::C', 'NEAR', 'SR::S', ['H4'], {n1: 5})])},
+    {name: 'Sợi dây: khung nhỏ dẫn, khung lớn xác nhận', root: newGroup('A', [C('PX::C', 'CUA', 'EMA:9:V', ['M15'], {n1: 5}), C('PX::C', 'GT', 'EMA:9:V', ['H1']), C('RIB:9,21,50:MAX', 'STKU', '', ['H4'])])},
+    {name: 'CCI M15/M30 cắt lên 90', root: newGroup('A', [C('CCI:14:V', 'CU', 'NUM:90:', ['M15', 'M30'], {n1: 1, tm: 'O'})])}
+  ];
+}
+function addFilter(tpl) {
+  const F = normFilter({id: uid(), name: tpl ? tpl.name : 'Bộ lọc mới', on: true, alert: false, amode: 'B', atf: 'H1', acool: 30, bar: 1, scope: ['*'], root: tpl ? tpl.root : newGroup('A', [newCond()]), created: Date.now()});
+  S.set.filters[F.id] = F; save(true); return F;
+}
+function resultsOf(F) { return (S.demo ? S.dscan : S.scan)[F.id] || null; }
+function parseRes(s) {
+  const p = String(s || '').split(';'), ok = p[0];
+  return {ok, tf: p.slice(1).map(x => { const [tf, o, a, b] = x.split(','); return {tf, ok: o, a, b}; })};
+}
+function filterHits(n) {
+  const out = [];
+  for (const F of Object.values(S.set.filters)) { if (!F.on) continue; const R = resultsOf(F); const r = R && R.r && R.r[fk(n)]; if (r && r.m === 1) out.push(F.name); }
+  return out;
+}
+/* ---------- logic hiển thị ---------- */
+function logicHtml(g, depth) {
+  if (g.on === false) return '';
+  const parts = [];
+  for (const it of g.items || []) {
+    if (it.k === 'g') { const x = logicHtml(it, depth + 1); if (x) parts.push({h: x, g: true, multi: x.includes('class="lop"')}); }
+    else if (it.on !== false) parts.push({h: esc(condText(it))});
+  }
+  if (!parts.length) return '';
+  const op = `<b class="lop">${g.op === 'O' ? 'HOẶC' : 'VÀ'}</b>`;
+  const one = p => p.g && p.multi ? `<span class="lpar">(</span>${p.h}<span class="lpar">)</span>` : p.h;
+  if (depth === 0) return parts.map((p, i) => `<div class="ll">${i ? op + ' ' : ''}${one(p)}</div>`).join('');
+  return parts.map((p, i) => (i ? ' ' + op + ' ' : '') + one(p)).join('');
+}
+function offList(g, out, parentOff) {
+  for (const it of g.items || []) {
+    const off = parentOff || it.on === false;
+    if (it.k === 'g') { if (it.on === false && !parentOff) out.push('Cả nhóm: ' + (it.items || []).filter(x => x.k !== 'g').map(condText).join(' / ')); offList(it, out, off); }
+    else if (it.on === false && !parentOff) out.push(condText(it));
+  }
+  return out;
+}
+function logicBox(F) {
+  const x = F.root.on === false ? '' : logicHtml(F.root, 0), off = F.root.on === false ? ['Toàn bộ bộ lọc đang tắt'] : offList(F.root, [], false);
+  return `<div class="logic"><div class="lh">Mã được chọn khi:</div>${x || '<div class="ll mu">Chưa có điều kiện nào đang bật. Tick vào ô vuông để cho điều kiện tham gia lọc.</div>'}
+    ${off.length ? `<div class="loff"><span>Không tham gia lọc (đang bỏ tick):</span>${off.map(t => `<s>${esc(t)}</s>`).join('')}</div>` : ''}</div>`;
+}
+/* ---------- cây điều kiện ---------- */
+function treeHtml(g, depth) {
+  const items = g.items || [];
+  let h = `<div class="g2 ${g.on === false ? 'off' : ''} ${depth ? 'sub' : ''}">
+    <div class="g2h"><label class="tk" title="Tham gia lọc"><input type="checkbox" data-tog="${g.id}" ${g.on !== false ? 'checked' : ''} aria-label="Nhóm tham gia lọc"><span></span></label>
+      <span class="g2n">${depth ? 'Nhóm' : 'Gốc'}</span>
+      <span class="opsw"><button type="button" data-op="${g.id}" data-v="A" aria-pressed="${g.op !== 'O'}">VÀ</button><button type="button" data-op="${g.id}" data-v="O" aria-pressed="${g.op === 'O'}">HOẶC</button></span>
+      ${depth ? `<button type="button" class="mini" data-del="${g.id}" aria-label="Xoá nhóm">Xoá</button>` : ''}</div><div class="g2i">`;
+  items.forEach((it, i) => {
+    if (i) h += `<div class="jn">${g.op === 'O' ? 'HOẶC' : 'VÀ'}</div>`;
+    if (it.k === 'g') h += treeHtml(it, depth + 1);
+    else h += `<div class="cn ${it.on === false ? 'off' : ''}"><label class="tk"><input type="checkbox" data-tog="${it.id}" ${it.on !== false ? 'checked' : ''} aria-label="Điều kiện tham gia lọc"><span></span></label>
+      <span class="cw"><button type="button" class="ct" data-edit="${it.id}">${esc(condText(it))}</button>
+      <span class="ca"><button type="button" class="mini" data-up="${it.id}" aria-label="Lên trên">↑</button><button type="button" class="mini" data-dup="${it.id}" aria-label="Nhân bản">⧉</button><button type="button" class="mini" data-del="${it.id}" aria-label="Xoá">✕</button></span></span></div>`;
+  });
+  if (!items.length) h += `<div class="hint" style="padding:6px 0">Nhóm trống. Thêm điều kiện bên dưới.</div>`;
+  h += `</div><div class="g2a"><button type="button" class="btn sm ghost" data-addc="${g.id}">+ Điều kiện</button><button type="button" class="btn sm ghost" data-addg="${g.id}">+ Nhóm con</button></div></div>`;
+  return h;
+}
+/* ---------- tab Lọc ---------- */
+function renderScan() {
+  const box = $('#tab-scan'), Fs = Object.values(S.set.filters).sort((a, b) => (a.created || 0) - (b.created || 0));
+  const card = F => {
+    const R = resultsOf(F), syms = scopeSyms(F), hit = R ? syms.filter(s => R.r[fk(s)] && R.r[fk(s)].m === 1) : [];
+    const lg = F.root.on === false ? '' : logicHtml(F.root, 1);
+    return `<div class="fc ${F.on ? '' : 'off'}" data-f="${F.id}">
+      <button type="button" class="fcm" data-open="${F.id}"><span class="fcn">${esc(F.name)}</span>
+        <span class="fcl">${lg || 'Chưa có điều kiện đang bật'}</span>
+        <span class="fch">${!F.on ? 'Đang tắt' : R ? `<b>${hit.length}</b>/${syms.length} mã khớp${hit.length ? ': ' + hit.slice(0, 4).map(base).join(', ') + (hit.length > 4 ? '…' : '') : ''}` : 'Đang chờ kết quả…'}</span></button>
+      <div class="fcs"><label class="fcsw"><span>Chạy</span><span class="sw"><input type="checkbox" data-run="${F.id}" ${F.on ? 'checked' : ''}><span></span></span></label>
+        <label class="fcsw"><span>Báo động</span><span class="sw"><input type="checkbox" data-al="${F.id}" ${F.alert ? 'checked' : ''}><span></span></span></label></div></div>`;
+  };
+  box.innerHTML = `<div class="pv">
+    <div class="sh2"><div><h2>Bộ lọc phân tích</h2><p>Mỗi bộ lọc là một cây điều kiện. Tick để cho nhóm hoặc điều kiện tham gia lọc, chọn VÀ / HOẶC cho từng nhóm.</p></div></div>
+    <button type="button" class="btn" id="fNew" style="width:100%">+ Tạo bộ lọc mới</button>
+    <div id="fList">${Fs.length ? Fs.map(card).join('') : '<p class="hint" style="margin-top:14px">Chưa có bộ lọc. Tạo mới hoặc thêm từ mẫu bên dưới.</p>'}</div>
+    <div class="fs">Thêm nhanh từ mẫu</div>
+    <div class="tpl">${tplFilters().map((t, i) => `<button type="button" class="chip" data-tpl="${i}">${esc(t.name)}</button>`).join('')}</div>
+    <p class="hint" style="margin-top:14px">${S.demo ? 'Đang demo: app tự tính trên dữ liệu giả lập.' : 'EA trên máy tính quét 5 giây/lần, kể cả khi điện thoại khoá màn hình.'}</p></div>`;
+  $('#fNew').onclick = () => openFilter(addFilter(null).id, 'cond');
+  $$('[data-tpl]', box).forEach(b => b.onclick = () => { const F = addFilter(tplFilters()[+b.dataset.tpl]); toast('Đã thêm “' + F.name + '”'); runDemoScan(); renderScan(); });
+  $$('[data-open]', box).forEach(b => b.onclick = () => openFilter(b.dataset.open));
+  $$('[data-run]', box).forEach(i => i.onchange = () => { S.set.filters[i.dataset.run].on = i.checked; save(); runDemoScan(); renderScan(); });
+  $$('[data-al]', box).forEach(i => i.onchange = () => { S.set.filters[i.dataset.al].alert = i.checked; save(); toast(i.checked ? 'Sẽ báo khi bộ lọc khớp' : 'Đã tắt báo động bộ lọc'); });
+}
+let FOPEN = null;
+function openFilter(fid, tab) {
+  const F = S.set.filters[fid]; if (!F) return;
+  let cur = tab || (resultsOf(F) ? 'res' : 'cond');
+  const tabs = () => `<div class="seg" style="margin-top:10px">${[['res', 'Kết quả'], ['cond', 'Điều kiện'], ['cfg', 'Cài đặt']].map(([k, t]) => `<button type="button" data-ft="${k}" aria-pressed="${cur === k}">${t}</button>`).join('')}</div>`;
+  const body = () => tabs() + `<div id="fBody">${cur === 'res' ? resHtml(F) : cur === 'cond' ? condHtml(F) : cfgHtml(F)}</div>`;
+  const api = openSheet(F.name, body(), {
+    full: true,
+    onClose: () => { FOPEN = null; renderScan(); },
+    mount: s => {
+      const draw = () => { s.body.innerHTML = body(); bind(); };
+      const bind = () => {
+        $$('[data-ft]', s.el).forEach(b => b.onclick = () => { cur = b.dataset.ft; draw(); });
+        if (cur === 'cond') bindTree(F, s.el, draw);
+        if (cur === 'cfg') bindCfg(F, s, draw);
+        if (cur === 'res') $$('[data-sym]', s.el).forEach(r => r.onclick = () => openSymbol(r.dataset.sym));
+      };
+      bind();
+      FOPEN = {fid, refresh: () => { if (cur === 'res') { $('#fBody', s.el).innerHTML = resHtml(F); $$('[data-sym]', s.el).forEach(r => r.onclick = () => openSymbol(r.dataset.sym)); } }};
+    }
+  });
+  return api;
+}
+function condHtml(F) {
+  return `${logicBox(F)}<div class="tree">${treeHtml(F.root, 0)}</div>
+    <p class="hint">Chạm vào một điều kiện để sửa chỉ báo, phép so, khung. Bỏ tick để tạm loại khỏi bộ lọc mà không xoá. Nút VÀ / HOẶC ở đầu mỗi nhóm quyết định cách nối các điều kiện trong nhóm đó.</p>`;
+}
+function bindTree(F, el, draw) {
+  const find = id => id === F.root.id ? {node: F.root, parent: null} : findNode(F.root, id);
+  const changed = () => { save(); runDemoScan(); draw(); };
+  $$('[data-tog]', el).forEach(i => i.onchange = () => { const r = find(i.dataset.tog); if (r) { r.node.on = i.checked; changed(); } });
+  $$('[data-op]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.op); if (r) { r.node.op = b.dataset.v; changed(); } });
+  $$('[data-edit]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.edit); if (r) openCondEditor(r.node, c => { Object.assign(r.node, c); changed(); }); });
+  $$('[data-addc]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.addc); if (!r) return; const c = newCond(); openCondEditor(c, x => { Object.assign(c, x); r.node.items.push(c); changed(); }); });
+  $$('[data-addg]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.addg); if (!r) return; r.node.items.push(newGroup(r.node.op === 'O' ? 'A' : 'O', [newCond()])); changed(); });
+  $$('[data-del]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.del); if (r && r.parent) { r.parent.items = r.parent.items.filter(x => x !== r.node); changed(); toast('Đã xoá'); } });
+  $$('[data-up]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.up); if (!r) return; const a = r.parent.items, i = a.indexOf(r.node); if (i > 0) { a.splice(i, 1); a.splice(i - 1, 0, r.node); changed(); } });
+  $$('[data-dup]', el).forEach(b => b.onclick = () => { const r = find(b.dataset.dup); if (!r) return; const c = JSON.parse(JSON.stringify(r.node)); c.id = uid(); r.parent.items.splice(r.parent.items.indexOf(r.node) + 1, 0, c); changed(); });
+}
+const CMP_S = {GT: '>', LT: '<', CU: 'cắt lên', CD: 'cắt xuống', CUA: 'cắt lên', CDA: 'cắt xuống', IN: 'trong vùng', OUT: 'ngoài vùng', RISE: 'tăng', FALL: 'giảm', TUP: 'đảo lên', TDN: 'đảo xuống', NEAR: 'gần', DIVB: 'PK tăng', DIVS: 'PK giảm', HDIVB: 'PK ẩn tăng', HDIVS: 'PK ẩn giảm', STKU: 'xếp tăng', STKD: 'xếp giảm'};
+function shortOp(op) {
+  const o = opParse(op), d = IND[o.ind];
+  if (o.ind === 'NUM') return fmtN(o.ps.join(','));
+  if (!d) return op;
+  if (o.ind === 'PX') return o.comp === 'C' || !o.comp ? 'Giá' : d.c[o.comp];
+  if (o.ind === 'SR') return o.comp === 'S' ? 'HT' : 'KC';
+  if (o.ind === 'PIV') return 'Pivot ' + o.comp;
+  if (o.ind === 'EMA' || o.ind === 'SMA') return o.ind + (o.ps[0] || '');
+  const cl = d.c[o.comp]; return d.n + (cl ? ' ' + cl : '');
+}
+function shortCond(c) {
+  const s = CMP_S[c.cmp] || c.cmp;
+  if (/DIV/.test(c.cmp)) return s + ' ' + shortOp(c.L);
+  if (/STK/.test(c.cmp)) return 'Chùm ' + (opParse(c.L).ps.join('-')) + ' ' + s;
+  if (c.cmp === 'IN' || c.cmp === 'OUT') return shortOp(c.L) + ' ' + s + ' ' + fmtN(c.n1) + '…' + fmtN(c.n2);
+  if (CMP[c.cmp] && CMP[c.cmp].B) return shortOp(c.L) + ' ' + s + ' ' + shortOp(c.R);
+  return shortOp(c.L) + ' ' + s;
+}
+function fmtVal(op, v) {
+  const x = parseFloat(v); if (!isFinite(x)) return '';
+  const ind = opParse(op).ind;
+  if (['CCI', 'RSI', 'STO', 'ADX'].includes(ind) || /:PB$/.test(op)) return fmtN(x.toFixed(1));
+  return Math.abs(x) >= 1000 ? fmtN(x.toFixed(1)) : fmtN(x);
+}
+function resHtml(F) {
+  const R = resultsOf(F), syms = scopeSyms(F);
+  if (!F.on) return `<p class="hint" style="margin-top:14px">Bộ lọc đang tắt. Bật “Chạy” ở tab Cài đặt hoặc ngoài danh sách.</p>`;
+  if (!syms.length) return `<p class="hint" style="margin-top:14px">Phạm vi chưa có mã nào. Chọn danh sách ở tab Cài đặt.</p>`;
+  if (!R || !R.r) return `<p class="hint" style="margin-top:14px">${S.demo ? 'Đang tính…' : 'Chưa có kết quả. EA quét 5 giây/lần khi app đang mở; kiểm tra EA đã chạy bản 0.2.'}</p>`;
+  const conds = []; const walk = (g, off) => { for (const it of g.items || []) { const o = off || it.on === false; if (it.k === 'g') walk(it, o); else if (!o) conds.push(it); } };
+  if (F.root.on !== false) walk(F.root, false);
+  const rows = syms.map(s => { const r = R.r[fk(s)]; if (!r) return null; const okN = conds.filter(c => parseRes(r.c && r.c[c.id]).ok === '1').length; return {s, r, okN}; }).filter(Boolean)
+    .sort((a, b) => (b.r.m - a.r.m) || (b.okN - a.okN) || a.s.localeCompare(b.s));
+  const hit = rows.filter(x => x.r.m === 1).length;
+  const chip = (c, r) => {
+    const p = parseRes(r.c && r.c[c.id]);
+    const st = p.ok === '1' ? 'y' : p.ok === '-' ? 'u' : 'n';
+    const showV = !/DIV|STK/.test(c.cmp);
+    const vals = p.tf.map(t => `${t.tf}${p.tf.length > 1 ? (t.ok === '1' ? '✓' : t.ok === '-' ? '?' : '✗') : ''}${showV && t.a ? ' ' + fmtVal(c.L, t.a) : ''}`).join(' · ');
+    return `<span class="rc ${st}" title="${esc(condText(c))}"><i>${st === 'y' ? '✓' : st === 'u' ? '?' : '✗'}</i>${esc(shortCond(c))} <span class="num">${esc(vals)}</span></span>`;
+  };
+  return `<div class="rsum"><b>${hit}</b> / ${rows.length} mã khớp · cập nhật ${R.t ? fDT.format(R.t * 1000) : ''}${F.bar ? ' · xét nến đã đóng' : ' · xét nến đang chạy'}</div>
+    ${rows.map(x => `<button type="button" class="rr ${x.r.m === 1 ? 'hit' : ''}" data-sym="${esc(x.s)}">
+      <span class="rr1"><b>${esc(base(x.s))}<span class="sfx">${esc(suffix(x.s))}</span></b><span class="rb">${x.r.m === 1 ? 'Khớp' : x.okN + '/' + conds.length + ' điều kiện'}</span></span>
+      <span class="rcs">${conds.map(c => chip(c, x.r)).join('')}</span></button>`).join('')}`;
+}
+function cfgHtml(F) {
+  return `<div class="fs">Tên bộ lọc</div><input class="in" id="fName" maxlength="50" value="${esc(F.name)}">
+    <div class="fl"><label for="fOn">Chạy bộ lọc</label><span class="sw"><input type="checkbox" id="fOn" ${F.on ? 'checked' : ''}><span></span></span></div>
+    <div class="fs">Phạm vi mã quét</div>
+    <div class="frow" style="flex-wrap:wrap"><button type="button" class="chip" data-sc="*" aria-pressed="${F.scope.includes('*')}">Mọi danh sách</button>
+      ${S.set.lists.map(l => `<button type="button" class="chip" data-sc="${esc(l.n)}" aria-pressed="${!F.scope.includes('*') && F.scope.includes(l.n)}">${esc(l.n)} (${l.s.length})</button>`).join('')}</div>
+    <div class="fs">Nến dùng để xét</div>
+    <div class="seg"><button type="button" data-bar="1" aria-pressed="${F.bar === 1}">Nến đã đóng</button><button type="button" data-bar="0" aria-pressed="${F.bar === 0}">Nến đang chạy</button></div>
+    <p class="hint">Nến đã đóng: tín hiệu chắc, không bị “nháy”. Nến đang chạy: sớm hơn nhưng có thể mất khi nến đóng.</p>
+    <div class="fs">Báo động khi khớp (EA gửi Telegram / MT5 Push)</div>
+    <div class="fl"><label for="fAl">Bật báo động</label><span class="sw"><input type="checkbox" id="fAl" ${F.alert ? 'checked' : ''}><span></span></span></div>
+    <div class="seg"><button type="button" data-am="B" aria-pressed="${F.amode === 'B'}">Mỗi nến mới</button><button type="button" data-am="C" aria-pressed="${F.amode === 'C'}">Nghỉ X phút</button><button type="button" data-am="O" aria-pressed="${F.amode === 'O'}">Chỉ 1 lần</button></div>
+    <div class="fl"><span class="lb">Khung tính “nến mới”</span><select class="in w" id="fAtf">${TF_STD.map(t => `<option ${F.atf === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+    <div class="fl"><span class="lb">Số phút nghỉ giữa 2 lần báo</span><input class="in num w" id="fAc" inputmode="numeric" value="${F.acool}"></div>
+    <p class="hint">Báo khi một mã chuyển từ “chưa khớp” sang “khớp”. Kiểu “mỗi nến mới”: còn khớp thì nhắc lại khi sang nến mới của khung đã chọn.</p>
+    <div style="display:flex;gap:8px;margin:16px 0"><button type="button" class="btn ghost" id="fDup">Nhân bản bộ lọc</button><button type="button" class="btn danger" id="fDel">Xoá bộ lọc</button></div>`;
+}
+function bindCfg(F, s, draw) {
+  const el = s.el, up = () => { save(); runDemoScan(); };
+  $('#fName', el).onchange = e => { F.name = e.target.value.trim() || 'Bộ lọc'; $('.sh h3', el).textContent = F.name; up(); };
+  $('#fOn', el).onchange = e => { F.on = e.target.checked; up(); };
+  $$('[data-sc]', el).forEach(b => b.onclick = () => {
+    const v = b.dataset.sc;
+    if (v === '*') F.scope = ['*'];
+    else { let sc = F.scope.filter(x => x !== '*'); sc = sc.includes(v) ? sc.filter(x => x !== v) : sc.concat(v); F.scope = sc.length ? sc : ['*']; }
+    up(); draw();
+  });
+  $$('[data-bar]', el).forEach(b => b.onclick = () => { F.bar = +b.dataset.bar; up(); draw(); });
+  $('#fAl', el).onchange = e => { F.alert = e.target.checked; up(); };
+  $$('[data-am]', el).forEach(b => b.onclick = () => { F.amode = b.dataset.am; up(); draw(); });
+  $('#fAtf', el).onchange = e => { F.atf = e.target.value; up(); };
+  $('#fAc', el).onchange = e => { F.acool = Math.max(1, parseInt(e.target.value, 10) || 30); up(); };
+  $('#fDup', el).onclick = () => { const c = JSON.parse(JSON.stringify(F)); c.id = uid(); c.name = F.name + ' (bản sao)'; c.created = Date.now(); S.set.filters[c.id] = normFilter(c); save(true); s.close(); toast('Đã nhân bản'); };
+  $('#fDel', el).onclick = () => { delete S.set.filters[F.id]; save(true); s.close(); toast('Đã xoá bộ lọc'); };
+}
+/* ---------- sửa 1 điều kiện ---------- */
+function opPicker(px, op) {
+  const o = opParse(op), d = IND[o.ind] || IND.CCI;
+  const inds = Object.keys(IND).map(k => `<button type="button" class="chip" data-act="ind" data-px="${px}" data-v="${k}" aria-pressed="${k === o.ind}">${IND[k].n}</button>`).join('');
+  const params = d.p.map((p, i) => `<label class="pp"><span>${esc(p[0])}</span><input class="in num" data-pin="${px}" data-i="${i}" value="${esc(o.ps[i] ?? p[1])}" ${o.ind === 'RIB' ? '' : 'inputmode="decimal"'}></label>`).join('');
+  const ribs = o.ind === 'RIB' ? `<div class="frow" style="flex-wrap:wrap;margin-top:6px">${S.set.ribbons.map((r, i) => `<button type="button" class="chip" data-act="rib" data-px="${px}" data-v="${i}" aria-pressed="${o.ps.join(',') === r.p}">${esc(r.n)}</button>`).join('')}<button type="button" class="chip add" data-act="ribsave" data-px="${px}">+ Lưu chùm này</button></div>` : '';
+  const cs = Object.entries(d.c).filter(([k, v]) => v);
+  const comps = cs.length > 1 ? `<div class="frow" style="flex-wrap:wrap;margin-top:8px">${cs.map(([k, v]) => `<button type="button" class="chip" data-act="comp" data-px="${px}" data-v="${k}" aria-pressed="${k === o.comp}">${esc(v)}</button>`).join('')}</div>` : '';
+  return `<div class="frow" style="flex-wrap:wrap">${inds}</div>${params ? `<div class="pps">${params}</div>` : ''}${ribs}${comps}`;
+}
+function openCondEditor(c0, onSave) {
+  const c = JSON.parse(JSON.stringify(c0));
+  let bMode = c.R && !String(c.R).startsWith('NUM:') ? 'I' : 'N';
+  const cmpsFor = () => {
+    const ind = opParse(c.L).ind;
+    return Object.entries(CMP).filter(([k, v]) => (v.rib ? ind === 'RIB' : true) && (!k.includes('DIV') || !['PX', 'SR', 'PIV'].includes(ind)));
+  };
+  const nIn = (key, def) => def ? `<div class="fl"><span class="lb">${esc(def[0])}</span><input class="in num w" data-n="${key}" inputmode="decimal" value="${esc(c[key] === undefined || c[key] === null || c[key] === '' ? def[1] : c[key])}"></div>` : '';
+  const body = () => {
+    const D = CMP[c.cmp] || CMP.GT;
+    const tfs = [...new Set(TF_QUICK.concat(c.tfs))];
+    return `<div class="fs">1 · Chỉ báo hoặc giá (A)</div>${opPicker('A', c.L)}
+      <div class="fs">2 · Phép so</div>
+      <select class="in" id="cCmp">${cmpsFor().map(([k, v]) => `<option value="${k}" ${k === c.cmp ? 'selected' : ''}>${esc(v.t)}</option>`).join('')}</select>
+      <p class="hint">${esc(D.h || '')}</p>
+      ${D.B ? `<div class="fs">3 · So với (B)</div>
+        <div class="seg"><button type="button" data-bm="N" aria-pressed="${bMode === 'N'}">Một con số</button><button type="button" data-bm="I" aria-pressed="${bMode === 'I'}">Chỉ báo / đường khác</button></div>
+        ${bMode === 'N' ? `<input class="in num" id="cBn" inputmode="decimal" value="${esc(opParse(c.R).ind === 'NUM' ? opParse(c.R).ps.join(',') : '0')}">` : opPicker('B', c.R && opParse(c.R).ind !== 'NUM' ? c.R : 'EMA:9:V')}` : ''}
+      ${D.n1 || D.n2 ? `<div class="fs">Thông số</div>${nIn('n1', D.n1)}${nIn('n2', D.n2)}` : ''}
+      <div class="fs">Khung thời gian (chọn 1 hoặc nhiều)</div>
+      <div class="tfs">${tfs.map(t => `<label><input type="checkbox" value="${t}" data-tf ${c.tfs.includes(t) ? 'checked' : ''}><span>${t}</span></label>`).join('')}</div>
+      <div class="cp"><input class="in" id="cTfx" placeholder="Khung khác: M40, M90, H2, H6…" autocomplete="off" spellcheck="false"><button type="button" class="btn sm ghost" id="cTfAdd">Thêm</button></div>
+      ${c.tfs.length > 1 ? `<div class="seg"><button type="button" data-tm="A" aria-pressed="${c.tm !== 'O'}">Mọi khung cùng khớp</button><button type="button" data-tm="O" aria-pressed="${c.tm === 'O'}">Chỉ cần 1 khung khớp</button></div>` : ''}
+      <div class="cprev"><span>Điều kiện:</span> <b id="cPrev">${esc(condText(c))}</b></div>`;
+  };
+  openSheet('Sửa điều kiện', body(), {
+    full: true, closeText: 'Huỷ',
+    foot: `<button type="button" class="btn" id="cSave">Lưu điều kiện</button>`,
+    mount: s => {
+      const el = s.el;
+      const prev = () => { const p = $('#cPrev', el); if (p) p.textContent = condText(c); };
+      const draw = () => { const y = s.body.scrollTop; s.body.innerHTML = body(); s.body.scrollTop = y; };
+      const setOp = (px, fn) => { const k = px === 'A' ? 'L' : 'R'; const o = opParse(c[k] && (px === 'A' || opParse(c[k]).ind !== 'NUM') ? c[k] : 'EMA:9:V'); fn(o); c[k] = opStr(o); };
+      el.addEventListener('click', e => {
+        const b = e.target.closest('button'); if (!b || !el.contains(b)) return;
+        const px = b.dataset.px;
+        if (b.dataset.act === 'ind') { const o = opDefault(b.dataset.v); c[px === 'A' ? 'L' : 'R'] = opStr(o); if (px === 'A') { const ok = cmpsFor().some(([k]) => k === c.cmp); if (!ok) c.cmp = 'GT'; } draw(); }
+        else if (b.dataset.act === 'comp') { setOp(px, o => { o.comp = b.dataset.v; }); draw(); }
+        else if (b.dataset.act === 'rib') { setOp(px, o => { o.ps = S.set.ribbons[+b.dataset.v].p.split(','); }); draw(); }
+        else if (b.dataset.act === 'ribsave') { const o = opParse(c[px === 'A' ? 'L' : 'R']); const p = o.ps.join(','); if (!S.set.ribbons.some(r => r.p === p)) { S.set.ribbons.push({n: 'Chùm ' + p.replace(/,/g, '-'), p}); save(); toast('Đã lưu chùm ' + p); } draw(); }
+        else if (b.dataset.bm) { bMode = b.dataset.bm; c.R = bMode === 'N' ? 'NUM:0:' : 'EMA:9:V'; draw(); }
+        else if (b.dataset.tm) { c.tm = b.dataset.tm; draw(); }
+        else if (b.id === 'cTfAdd') {
+          const v = $('#cTfx', el).value.trim().toUpperCase().replace(/^MN$/, 'MN1');
+          if (!tfValid(v)) return toast('Khung chưa đúng. Ví dụ: M40, M90, H2, H6, D1');
+          if (!c.tfs.includes(v)) c.tfs.push(v); draw();
+        }
+        else if (b.id === 'cSave') {
+          if (!c.tfs.length) return toast('Chọn ít nhất 1 khung');
+          const D = CMP[c.cmp];
+          if (D.B && !c.R) return toast('Chọn B để so sánh');
+          if (!D.B) c.R = '';
+          if (D.n1 && !(isFinite(+c.n1) && c.n1 !== '')) c.n1 = D.n1[1];
+          if (D.n2 && !(isFinite(+c.n2) && c.n2 !== '')) c.n2 = D.n2[1];
+          c.n1 = +c.n1 || 0; c.n2 = +c.n2 || 0;
+          onSave(c); s.close();
+        }
+      });
+      el.addEventListener('change', e => {
+        const t = e.target;
+        if (t.id === 'cCmp') {
+          c.cmp = t.value; const D = CMP[c.cmp];
+          c.n1 = D.n1 ? D.n1[1] : 0; c.n2 = D.n2 ? D.n2[1] : 0;
+          if (D.B && !c.R) { c.R = 'NUM:0:'; bMode = 'N'; }
+          if (c.cmp === 'NEAR' && (!c.R || opParse(c.R).ind === 'NUM')) { c.R = 'SR::R'; bMode = 'I'; }
+          draw();
+        } else if (t.dataset.tf !== undefined) { c.tfs = $$('[data-tf]', el).filter(x => x.checked).map(x => x.value); draw(); }
+      });
+      el.addEventListener('input', e => {
+        const t = e.target;
+        if (t.dataset.pin) { setOp(t.dataset.pin, o => { o.ps[+t.dataset.i] = t.value.replace(/\s+/g, '').replace(/[:|]/g, ''); }); prev(); }
+        else if (t.id === 'cBn') { const v = parseFloat(String(t.value).replace(',', '.')); c.R = 'NUM:' + (isFinite(v) ? v : 0) + ':'; prev(); }
+        else if (t.dataset.n) { c[t.dataset.n] = String(t.value).replace(',', '.'); prev(); }
+      });
+    }
+  });
+}
+/* ---------- DEMO: nến giả lập + quét ---------- */
+const DBARS = {};
+function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function demoBars(sym, tf) {
+  const key = sym + '|' + tf, q = quote(sym);
+  if (!q || q.b == null) return null;
+  let D = DBARS[key];
+  if (!D) {
+    let s = hashStr(key) || 1; const r = () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+    const n = 420, mins = tfMin(tf) || 60, vol = q.b * 0.0011 * Math.sqrt(mins / 60);
+    const c = new Array(n); c[n - 1] = q.b;
+    for (let i = n - 2; i >= 0; i--) c[i] = c[i + 1] - ((r() - 0.5) * 2 * vol + Math.sin(i / (17 + (s % 13))) * vol * 0.55);
+    D = {tf, t: [], o: [], h: [], l: [], c, cache: {}};
+    for (let i = 0; i < n; i++) { const o = i ? c[i - 1] : c[0]; D.o.push(o); D.h.push(Math.max(o, c[i]) + r() * vol * 0.6); D.l.push(Math.min(o, c[i]) - r() * vol * 0.6); D.t.push(i); }
+    DBARS[key] = D;
+  }
+  const i = D.c.length - 1; D.c[i] = q.b; D.h[i] = Math.max(D.h[i], q.b); D.l[i] = Math.min(D.l[i], q.b); D.cache = {};
+  return D;
+}
+const DEMO_CTX = {data: demoBars, pip: n => pipOf(n).size, srBars: tf => S.set.sr.bars[tf] || TF_BARS[tf] || 130};
+const DFST = {};
+function runDemoScan() {
+  if (!S.demo) return;
+  const now = Date.now();
+  for (const F of Object.values(S.set.filters)) {
+    if (!F.on) { delete S.dscan[F.id]; continue; }
+    const syms = scopeSyms(F);
+    for (const k in DBARS) DBARS[k].cache = {};
+    const R = ENG.evalFilter(F, syms, DEMO_CTX, fk);
+    if (F.alert) for (const s of syms) {
+      const r = R.r[fk(s)], key = F.id + '|' + s, st = DFST[key] = DFST[key] || {last: 0, t: 0};
+      if (r && r.m === 1 && !st.last && (F.amode !== 'C' || now - st.t > F.acool * 60000) && !(F.amode === 'O' && st.t)) {
+        st.t = now; const msg = '🔎 Bộ lọc “' + F.name + '” khớp: ' + base(s);
+        S.log['f' + now + s] = {t: now, id: F.id, m: msg}; toast(msg);
+      }
+      st.last = r ? r.m : 0;
+    }
+    S.dscan[F.id] = R;
+  }
+  if (S.tab === 'scan' && !FOPEN) renderScan();
+  if (FOPEN) FOPEN.refresh();
+  schedRows();
+}
+
+
+/* ---------- sheet chung ---------- */
+const STACK = [];
+function openSheet(title, body, opt = {}) {
+  const ov = document.createElement('div'); ov.className = 'ov';
+  ov.innerHTML = `<div class="sheet ${opt.full ? 'full' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="sh"><h3>${esc(title)}</h3>${opt.right || ''}<button class="x" type="button">${opt.closeText || 'Đóng'}</button></div>
+    <div class="sb">${body}</div>${opt.foot ? `<div class="sf">${opt.foot}</div>` : ''}</div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(() => ov.classList.add('on'));
+  const close = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); const i = STACK.indexOf(api); if (i >= 0) STACK.splice(i, 1); opt.onClose && opt.onClose(); };
+  const api = {el: ov, close, body: $('.sb', ov)};
+  $('.x', ov).onclick = close;
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  STACK.push(api);
+  opt.mount && opt.mount(api);
+  return api;
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && STACK.length) STACK[STACK.length - 1].close(); });
+function promptSheet(title, label, val, cb) {
+  openSheet(title, `<label class="fs" for="pIn">${esc(label)}</label><input class="in" id="pIn" value="${esc(val)}" maxlength="40">`, {
+    foot: `<button class="btn" type="button" id="pOk">Lưu</button>`,
+    mount: s => { const i = $('#pIn', s.el); setTimeout(() => i.focus(), 250); $('#pOk', s.el).onclick = () => { cb(i.value); s.close(); }; i.onkeydown = e => { if (e.key === 'Enter') $('#pOk', s.el).click(); }; }
+  });
+}
+let toastT = 0;
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3200); try { navigator.vibrate && navigator.vibrate(60); } catch (e) {} }
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); toast('Đã sao chép'); }
+  catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (x) {} a.remove(); toast(ok ? 'Đã sao chép' : 'Không sao chép được, hãy chọn và sao chép bằng tay'); }
+}
+
+/* ---------- chọn mã ---------- */
+function symbolUniverse() {
+  if (S.sym.length) return S.sym.map(x => x.n);
+  return [...new Set(DEF_LIST.concat(allWatch()))];
+}
+function openPicker() {
+  const L = curList(), sel = new Set(L.s);
+  const uni = symbolUniverse();
+  const byG = {}; uni.forEach(n => { (byG[cls(n)] = byG[cls(n)] || []).push(n); });
+  const desc = n => { const i = symInfo(n); return i && i.ds ? i.ds : ''; };
+  const note = S.sym.length ? `${uni.length} mã từ tài khoản sàn của bạn.` : (S.demo ? 'Đang dùng danh sách mẫu (demo).' : 'Chưa nhận được danh sách mã từ EA, đang hiện danh sách mặc định.');
+  const body = `<div class="search"><input class="in" id="pq" type="search" placeholder="Tìm mã, ví dụ XAU, JPY, US30" autocomplete="off"><div class="hint">${note} Tick cả nhóm hoặc từng mã.</div></div>
+    ${GROUPS.filter(([g]) => byG[g]).map(([g, t]) => `<div class="grp" data-g="${g}">
+      <div class="gh2"><input type="checkbox" class="ck gck" aria-label="Chọn cả nhóm ${t}"><span class="t">${t}</span><span class="c"></span><button type="button" class="tg">Mở</button></div>
+      <div class="items" hidden>${byG[g].sort().map(n => `<label class="it" data-n="${esc(n)}"><input type="checkbox" class="ck ick" value="${esc(n)}" ${sel.has(n) ? 'checked' : ''}><span class="s">${esc(n)}</span><span class="d">${esc(desc(n))}</span></label>`).join('')}</div></div>`).join('')}`;
+  openSheet('Chọn mã cho “' + L.n + '”', body, {
+    full: true, closeText: 'Huỷ',
+    foot: `<button class="btn ghost" type="button" id="pkClear">Bỏ chọn hết</button><button class="btn" type="button" id="pkOk">Lưu (<span id="pkN">0</span>)</button>`,
+    mount: s => {
+      const el = s.el;
+      const sync = () => {
+        $$('.grp', el).forEach(G => {
+          const ick = $$('.ick', G), on = ick.filter(i => i.checked).length, gck = $('.gck', G);
+          gck.checked = on === ick.length; gck.indeterminate = on > 0 && on < ick.length;
+          $('.c', G).textContent = on + '/' + ick.length;
+        });
+        $('#pkN', el).textContent = $$('.ick:checked', el).length;
+      };
+      $$('.grp', el).forEach(G => {
+        $('.gck', G).onchange = e => { $$('.ick', G).forEach(i => { if (!i.closest('.it').hidden) i.checked = e.target.checked; }); sync(); };
+        $('.tg', G).onclick = () => { const it = $('.items', G); it.hidden = !it.hidden; $('.tg', G).textContent = it.hidden ? 'Mở' : 'Thu'; };
+        if ($$('.ick:checked', G).length) { $('.items', G).hidden = false; $('.tg', G).textContent = 'Thu'; }
+      });
+      $$('.ick', el).forEach(i => i.onchange = sync);
+      $('#pq', el).oninput = e => {
+        const q = e.target.value.trim().toUpperCase();
+        $$('.grp', el).forEach(G => {
+          let any = false;
+          $$('.it', G).forEach(it => { const ok = !q || it.dataset.n.toUpperCase().includes(q) || $('.d', it).textContent.toUpperCase().includes(q); it.hidden = !ok; any = any || ok; });
+          G.hidden = !any; if (q && any) { $('.items', G).hidden = false; $('.tg', G).textContent = 'Thu'; }
+        });
+      };
+      $('#pkClear', el).onclick = () => { $$('.ick', el).forEach(i => i.checked = false); sync(); };
+      $('#pkOk', el).onclick = () => {
+        const chosen = $$('.ick:checked', el).map(i => i.value);
+        const keep = L.s.filter(n => chosen.includes(n));
+        L.s = keep.concat(chosen.filter(n => !keep.includes(n)));
+        save(); s.close(); renderPairs(); toast('Đã lưu ' + L.s.length + ' mã');
+      };
+      sync();
+    }
+  });
+}
+
+/* ---------- chi tiết mã ---------- */
+function alertText(a) {
+  const P = v => a.sym && a.sym !== '-' ? fmtPx(a.sym, v) : v;
+  switch (a.type) {
+    case 'L': return `${base(a.sym)} ${a.dir === 'U' ? 'cắt lên' : a.dir === 'D' ? 'cắt xuống' : 'chạm'} ${P(a.p1)}`;
+    case 'Z': return `${base(a.sym)} vào vùng ${P(Math.min(a.p1, a.p2))}–${P(Math.max(a.p1, a.p2))}`;
+    case 'R': return `${base(a.sym)} cách hỗ trợ/kháng cự ${(a.tfs || []).join(', ')} ≤ ${a.dist} ${pipOf(a.sym).unit}`;
+    case 'N': return `Tin ${(a.ccys && a.ccys.length ? a.ccys : ccysOf(a.sym)).join(', ')} mức ${IMP[a.imp] || ''} trở lên: báo trước ${a.mins} phút` + (a.sym && a.sym !== '-' ? ` (${base(a.sym)})` : '');
+    case 'E': return `Tin ${a.evName || ''}: báo trước ${a.mins} phút`;
+  }
+  return '';
+}
+function alertRow(a) {
+  const st = !a.on ? 'Đang tắt' : (!(a.rep > 0) && S.fired[a.id]) ? 'Đã báo lúc ' + fDT.format(S.fired[a.id]) : (a.rep > 0 ? `Lặp lại, nghỉ ${a.rep} phút giữa 2 lần` : 'Báo 1 lần');
+  return `<div class="al" data-id="${a.id}"><div class="tx"><b>${esc(alertText(a))}</b><small>${esc(st)}${a.note ? ' · ' + esc(a.note) : ''}</small></div>
+    <label class="sw"><input type="checkbox" ${a.on && !(!(a.rep > 0) && S.fired[a.id]) ? 'checked' : ''} aria-label="Bật/tắt"><span></span></label><button class="del" type="button">Xoá</button></div>`;
+}
+function bindAlertRows(el, refresh) {
+  $$('.al', el).forEach(r => {
+    const a = S.set.alerts[r.dataset.id]; if (!a) return;
+    $('input', r).onchange = e => {
+      if (e.target.checked) { if (S.fired[a.id]) { delete S.set.alerts[a.id]; a.id = uid(); S.set.alerts[a.id] = a; } a.on = true; }
+      else a.on = false;
+      save(); refresh(); renderAlertBadge();
+    };
+    $('.del', r).onclick = () => { delete S.set.alerts[a.id]; save(); refresh(); renderAlertBadge(); toast('Đã xoá báo động'); };
+  });
+}
+function openSymbol(n) {
+  const body = () => {
+    const q = quote(n) || {}, p = pipOf(n);
+    const sp = q.a && q.b ? fmtDist(n, q.a - q.b) : '—';
+    const cell = (x, d, c) => x ? `<span class="${c}">${zTxt(n, x)}</span><br><small class="mu">cách ${fmtDist(n, Math.max(0, d))} · chạm ${x.c} lần</small>` : '—';
+    const srRows = TFS.map(tf => { const z = srZones(n, tf); if (!z) return ''; return `<tr><td>${tf}</td><td>${cell(z.r, z.r && z.r.lo - z.b, 'dn')}</td><td>${cell(z.s, z.s && z.b - z.s.hi, 'up')}</td></tr>`; }).join('');
+    const now = Date.now();
+    const news = ccysOf(n).flatMap(c => CAL_BY[c] || []).filter(e => e.ms > now - 3600000).sort((a, b) => a.ms - b.ms).slice(0, 6);
+    const als = Object.values(S.set.alerts).filter(a => a.sym === n);
+    return `<div class="kv"><div><small>Bid</small><b>${q.b != null ? fmtPx(n, q.b) : '—'}</b></div><div><small>Ask</small><b>${q.a != null ? fmtPx(n, q.a) : '—'}</b></div><div><small>Spread</small><b>${sp}</b></div>
+      <div><small>Mở ngày</small><b>${q.o ? fmtPx(n, q.o) : '—'}</b></div><div><small>Cao ngày</small><b>${q.h ? fmtPx(n, q.h) : '—'}</b></div><div><small>Thấp ngày</small><b>${q.l ? fmtPx(n, q.l) : '—'}</b></div></div>
+      <div class="fs">Báo động của mã này</div>
+      <div id="symAl">${als.length ? als.map(alertRow).join('') : '<p class="hint">Chưa có báo động.</p>'}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+        <button class="btn sm" type="button" data-new="L">+ Mức giá</button><button class="btn sm" type="button" data-new="Z">+ Vùng giá</button>
+        <button class="btn sm" type="button" data-new="R">+ Gần HT/KC</button><button class="btn sm" type="button" data-new="N">+ Tin kinh tế</button></div>
+      <div class="fs">Hỗ trợ / kháng cự</div>
+      ${srRows ? `<table class="srt"><thead><tr><th>Khung</th><th>Kháng cự</th><th>Hỗ trợ</th></tr></thead><tbody>${srRows}</tbody></table>` : '<p class="hint">Chưa có dữ liệu. EA tính lại mỗi phút.</p>'}
+      <div class="fs">Tin sắp tới (${ccysOf(n).join(', ')})</div>
+      ${news.length ? news.map(e => `<div class="lg"><small>${fDT.format(e.ms).slice(0, 11)}</small><span class="imp i${e.i}">${IMP[e.i]}</span> <b>${esc(e.c)}</b> ${esc(e.n)}</div>`).join('') : '<p class="hint">Không có tin trong lịch.</p>'}
+      <div class="fs">Cài đặt riêng cho mã</div>
+      <div class="fl"><span class="lb">Đơn vị khoảng cách<small>Mặc định nhóm: ${esc(PIP_DEF[pipKey(n)].label)}, ${esc(PIP_DEF[pipKey(n)].note)}</small></span></div>
+      <div style="display:flex;gap:8px;margin:8px 0"><input class="in num" id="pipSz" inputmode="decimal" placeholder="${p.size}" value="${p.own ? p.size : ''}" aria-label="1 đơn vị bằng bao nhiêu giá"><select class="in" id="pipUn" style="width:120px" aria-label="Tên đơn vị">${['pip', 'giá', 'điểm', 'cent'].map(u => `<option ${u === p.unit ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
+      <p class="hint">Để trống = dùng định nghĩa của nhóm (sửa trong Cài đặt → Định nghĩa pip).</p>
+      <div class="fl"><span class="lb">Tiền tệ ảnh hưởng tới mã<small>Dùng để gắn tin kinh tế. Ví dụ: USD, EUR</small></span></div>
+      <input class="in" id="ccyIn" value="${esc(S.set.ccy[fk(n)] || '')}" placeholder="${ccysOf(n).join(', ')}">
+      <div style="display:flex;gap:8px;margin:14px 0"><button class="btn ghost" type="button" id="symSave">Lưu cài đặt mã</button><button class="btn danger" type="button" id="symRm">Bỏ khỏi danh sách</button></div>`;
+  };
+  openSheet(n, body(), {
+    full: true,
+    mount: s => {
+      const bind = () => {
+        bindAlertRows($('#symAl', s.el), () => { s.body.innerHTML = body(); bind(); });
+        $$('[data-new]', s.el).forEach(b => b.onclick = () => openAlertForm({sym: n, type: b.dataset.new}, () => { s.body.innerHTML = body(); bind(); }));
+        $('#symSave', s.el).onclick = () => {
+          const sz = parseFloat(String($('#pipSz', s.el).value).replace(',', '.'));
+          if (sz > 0) S.set.pips.sym[fk(n)] = {size: sz, unit: $('#pipUn', s.el).value}; else delete S.set.pips.sym[fk(n)];
+          const c = $('#ccyIn', s.el).value.trim().toUpperCase();
+          if (c) S.set.ccy[fk(n)] = c; else delete S.set.ccy[fk(n)];
+          save(); toast('Đã lưu cài đặt cho ' + n); s.body.innerHTML = body(); bind(); renderPairs();
+        };
+        $('#symRm', s.el).onclick = () => { const L = curList(); L.s = L.s.filter(x => x !== n); save(); s.close(); renderPairs(); };
+      };
+      bind();
+    }
+  });
+}
+
+/* ---------- form báo động ---------- */
+function openAlertForm(init, done) {
+  const a = Object.assign({id: uid(), on: true, rep: 0, dir: 'B', tfs: ['H4'], dist: 5, mins: 15, imp: 3, note: ''}, init);
+  const n = a.sym, q = quote(n) || {}, p = pipOf(n);
+  if (a.p1 == null && q.b != null) a.p1 = +fmtPx(n, q.b);
+  if (a.p2 == null && q.b != null) a.p2 = +fmtPx(n, q.b + 5 * p.size);
+  const T = {L: 'Mức giá', Z: 'Vùng giá', R: 'Gần HT/KC', N: 'Tin kinh tế'};
+  const fields = () => {
+    if (a.type === 'L') return `<div class="fs">Giá</div><input class="in num" id="fP1" inputmode="decimal" value="${a.p1 ?? ''}">
+      <div class="seg" role="group">${[['U', 'Cắt lên'], ['D', 'Cắt xuống'], ['B', 'Cả hai']].map(([k, t]) => `<button type="button" data-dir="${k}" aria-pressed="${a.dir === k}">${t}</button>`).join('')}</div>`;
+    if (a.type === 'Z') return `<div class="fs">Vùng giá (từ – đến)</div><div style="display:flex;gap:8px"><input class="in num" id="fP1" inputmode="decimal" value="${a.p1 ?? ''}"><input class="in num" id="fP2" inputmode="decimal" value="${a.p2 ?? ''}"></div><p class="hint">Báo khi giá đi vào trong vùng.</p>`;
+    if (a.type === 'R') return `<div class="fs">Báo khi giá cách hỗ trợ/kháng cự</div><div style="display:flex;gap:8px;align-items:center"><span>≤</span><input class="in num w" id="fDist" inputmode="decimal" value="${a.dist}"><span>${p.unit}</span></div>
+      <p class="hint">${esc(PIP_DEF[pipKey(n)].label)}: ${p.unit === 'pip' ? '1 pip = ' + p.size : '1 ' + p.unit + ' = ' + p.size} (đổi trong chi tiết mã).</p>
+      <div class="fs">Khung đối chiếu (chọn 1 hoặc nhiều)</div><div class="tfs">${TFS.map(t => `<label><input type="checkbox" value="${t}" ${a.tfs.includes(t) ? 'checked' : ''}><span>${t}</span></label>`).join('')}</div>
+      <p class="hint">Khung chưa bật trong Cài đặt → Hỗ trợ/kháng cự sẽ được tự bật thêm.</p>`;
+    if (a.type === 'N') return `<div class="fs">Báo trước khi ra tin</div><div style="display:flex;gap:8px;align-items:center"><input class="in num w" id="fMins" inputmode="numeric" value="${a.mins}"><span>phút</span></div>
+      <div class="fs">Mức tin từ</div><div class="seg">${[3, 2, 1].map(i => `<button type="button" data-imp="${i}" aria-pressed="${+a.imp === i}">${IMP[i]}${i < 3 ? ' trở lên' : ''}</button>`).join('')}</div>
+      <p class="hint">Tiền tệ: ${ccysOf(n).join(', ')} (đổi trong chi tiết mã).</p>`;
+    return '';
+  };
+  const body = () => `<div class="seg">${Object.entries(T).map(([k, t]) => `<button type="button" data-type="${k}" aria-pressed="${a.type === k}">${t}</button>`).join('')}</div>
+    <div id="ff">${fields()}</div>
+    <div class="fs">Lặp lại</div>
+    <div class="seg">${[[0, 'Báo 1 lần'], [5, 'Nghỉ 5 phút'], [15, '15 phút'], [60, '60 phút']].map(([k, t]) => `<button type="button" data-rep="${k}" aria-pressed="${(a.rep | 0) === k}">${t}</button>`).join('')}</div>
+    <div class="fs">Ghi chú (tuỳ chọn)</div><input class="in" id="fNote" maxlength="60" value="${esc(a.note)}" placeholder="Ví dụ: canh sell vùng này">
+    <p class="hint">Báo động do EA kiểm tra liên tục và gửi về Telegram / MT5 Push, kể cả khi điện thoại khoá màn hình.</p>`;
+  openSheet('Báo động ' + n, body(), {
+    full: true, closeText: 'Huỷ',
+    foot: `<button class="btn" type="button" id="fSave">Lưu báo động</button>`,
+    mount: s => {
+      const read = () => {
+        const v = id => { const e = $(id, s.el); return e ? parseFloat(String(e.value).replace(',', '.')) : NaN; };
+        if (a.type === 'L' || a.type === 'Z') a.p1 = v('#fP1');
+        if (a.type === 'Z') a.p2 = v('#fP2');
+        if (a.type === 'R') { a.dist = v('#fDist'); a.tfs = $$('.tfs input:checked', s.el).map(i => i.value); }
+        if (a.type === 'N') a.mins = v('#fMins');
+        a.note = $('#fNote', s.el).value.trim();
+      };
+      const bind = () => {
+        $$('[data-type]', s.el).forEach(b => b.onclick = () => { read(); a.type = b.dataset.type; s.body.innerHTML = body(); bind(); });
+        $$('[data-dir]', s.el).forEach(b => b.onclick = () => { a.dir = b.dataset.dir; $$('[data-dir]', s.el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+        $$('[data-imp]', s.el).forEach(b => b.onclick = () => { a.imp = +b.dataset.imp; $$('[data-imp]', s.el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+        $$('[data-rep]', s.el).forEach(b => b.onclick = () => { a.rep = +b.dataset.rep; $$('[data-rep]', s.el).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+      };
+      bind();
+      $('#fSave', s.el).onclick = () => {
+        read();
+        if ((a.type === 'L' || a.type === 'Z') && !(a.p1 > 0)) return toast('Nhập giá hợp lệ');
+        if (a.type === 'Z' && !(a.p2 > 0)) return toast('Nhập đủ 2 đầu vùng giá');
+        if (a.type === 'R' && (!(a.dist > 0) || !a.tfs.length)) return toast('Nhập khoảng cách và chọn ít nhất 1 khung');
+        if (a.type === 'N' && !(a.mins > 0)) return toast('Nhập số phút');
+        if (a.type === 'R') a.tfs.forEach(t => { if (!S.set.sr.tfs.includes(t)) S.set.sr.tfs.push(t); });
+        a.created = a.created || Date.now();
+        S.set.alerts[a.id] = a; save(true); s.close(); renderAlertBadge(); toast('Đã lưu báo động'); done && done();
+      };
+    }
+  });
+}
+function openEvent(e) {
+  if (!e) return;
+  const mins = [5, 15, 30, 60];
+  openSheet(e.c + ' · ' + IMP[e.i], `<h3 style="margin:12px 0 4px;font-size:17px">${esc(e.n)}</h3>
+    <p class="mu" style="margin:0 0 10px">${fDT.format(e.ms)} (giờ Việt Nam)</p>
+    <div class="kv"><div><small>Thực tế</small><b>${esc(e.a || '—')}</b></div><div><small>Dự báo</small><b>${esc(e.f || '—')}</b></div><div><small>Kỳ trước</small><b>${esc(e.p || '—')}</b></div></div>
+    <div class="fs">Báo riêng cho tin này</div>
+    <div class="seg">${mins.map(m => `<button type="button" data-m="${m}">Trước ${m} phút</button>`).join('')}</div>`, {
+    mount: s => $$('[data-m]', s.el).forEach(b => b.onclick = () => {
+      if (e.ms < Date.now()) return toast('Tin này đã qua');
+      const a = {id: uid(), on: true, rep: 0, type: 'E', sym: '-', ev: e.id, evName: e.c + ' ' + e.n, mins: +b.dataset.m, created: Date.now(), note: ''};
+      S.set.alerts[a.id] = a; save(true); renderAlertBadge(); s.close(); toast('Sẽ báo trước ' + a.mins + ' phút');
+    })
+  });
+}
+
+/* ---------- danh sách báo động ---------- */
+function renderAlertBadge() {
+  const n = Object.values(S.set.alerts).filter(a => a.on && !(!(a.rep > 0) && S.fired[a.id])).length;
+  const d = $('#alCount'); d.hidden = !n; d.textContent = n;
+}
+function openAlerts() {
+  const body = () => {
+    const al = Object.values(S.set.alerts).sort((a, b) => (b.created || 0) - (a.created || 0));
+    const lg = Object.values(S.log || {}).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 40);
+    return `<div class="fs">Báo động đang có (${al.length})</div>
+      ${al.length ? al.map(alertRow).join('') : '<p class="hint">Chưa có báo động. Chạm vào một mã ở tab Cặp tiền để thêm.</p>'}
+      <div class="fs">Nhật ký đã báo</div>
+      ${lg.length ? lg.map(l => `<div class="lg"><small>${l.t ? fDT.format(l.t) : ''}</small>${esc(l.m)}</div>`).join('') + `<button class="btn ghost sm" type="button" id="clrLog" style="margin-top:10px">Xoá nhật ký</button>` : '<p class="hint">Chưa có lần báo nào.</p>'}`;
+  };
+  openSheet('Báo động', body(), {
+    full: true,
+    mount: s => {
+      const bind = () => {
+        bindAlertRows(s.el, () => { s.body.innerHTML = body(); bind(); });
+        const c = $('#clrLog', s.el); if (c) c.onclick = () => { S.log = {}; if (!S.demo && S.conn === 'on') FB.del('/log').catch(() => {}); s.body.innerHTML = body(); bind(); };
+      };
+      bind();
+    }
+  });
+}
+
+/* ---------- cài đặt ---------- */
+const RULES = `{
+  "rules": {
+    "$k": {
+      ".read": "$k.length >= 20",
+      ".write": "$k.length >= 20"
+    }
+  }
+}`;
+function genKey() { const a = new Uint8Array(24); crypto.getRandomValues(a); return [...a].map(x => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join(''); }
+function connCode() { return 'FXR1|' + S.cfg.db.trim() + '|' + S.cfg.key.trim(); }
+function openSettings() {
+  const N = S.set.news, R = S.set.sr;
+  const body = `
+    <div class="fs">Kết nối EA</div>
+    <div class="fl"><span class="lb">Trạng thái<small id="stTxt">${esc(statusText())}</small></span><button class="btn sm ghost" type="button" id="btnGuide">Hướng dẫn cài</button></div>
+    <label class="fs" for="cDb">URL Firebase Realtime Database</label>
+    <input class="in" id="cDb" value="${esc(S.cfg.db)}" placeholder="https://ten-du-an-default-rtdb.asia-southeast1.firebasedatabase.app" autocomplete="off" spellcheck="false">
+    <label class="fs" for="cKey">Khoá bí mật (giống ô InpKey của EA)</label>
+    <div class="cp"><input class="in num" id="cKey" value="${esc(S.cfg.key)}" autocomplete="off" spellcheck="false"><button class="btn sm ghost" type="button" id="cGen">Tạo</button></div>
+    <label class="fs" for="cCode">Hoặc dán mã kết nối (sao chép từ máy tính)</label>
+    <input class="in num" id="cCode" placeholder="FXR1|https://…|…" autocomplete="off">
+    <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap"><button class="btn" type="button" id="cGo">Kết nối</button><button class="btn ghost" type="button" id="cCopy">Sao chép mã kết nối</button><button class="btn ghost" type="button" id="cDemo">Xem demo</button></div>
+
+    <div class="fs">Thông báo khi app đang tắt (EA gửi)</div>
+    <div class="fl"><label for="nTg">Telegram<small>Cần nhập token và chat id trong EA</small></label><span class="sw"><input type="checkbox" id="nTg" ${S.set.notify.tg ? 'checked' : ''}><span></span></span></div>
+    <div class="fl"><label for="nPush">MT5 Push<small>Về app MetaTrader 5 trên điện thoại (cần MetaQuotes ID)</small></label><span class="sw"><input type="checkbox" id="nPush" ${S.set.notify.push ? 'checked' : ''}><span></span></span></div>
+
+    <div class="fs">Tin kinh tế trên bảng giá</div>
+    <div class="fl"><span class="lb">Tô đỏ cả dòng từ … phút trước</span><input class="in num w" id="nB" inputmode="numeric" value="${N.before}"></div>
+    <div class="fl"><span class="lb">… đến … phút sau khi ra tin</span><input class="in num w" id="nA" inputmode="numeric" value="${N.after}"></div>
+    <div class="fl"><span class="lb">Tô đỏ với tin mức</span><select class="in w" id="nHl">${[3, 2, 1].map(i => `<option value="${i}" ${N.hl === i ? 'selected' : ''}>${IMP[i]}${i < 3 ? ' trở lên' : ''}</option>`).join('')}</select></div>
+    <div class="fl"><span class="lb">Hiện tin sắp tới từ mức</span><select class="in w" id="nSh">${[3, 2, 1].map(i => `<option value="${i}" ${N.show === i ? 'selected' : ''}>${IMP[i]}${i < 3 ? ' trở lên' : ''}</option>`).join('')}</select></div>
+    <div class="fl"><span class="lb">Nhắc mọi tin của các mã đang theo dõi<small>0 = tắt. Ví dụ 10 = báo trước 10 phút</small></span><input class="in num w" id="nNm" inputmode="numeric" value="${N.notifyMin}"></div>
+    <div class="fl"><span class="lb">… với tin mức</span><select class="in w" id="nNi">${[3, 2, 1].map(i => `<option value="${i}" ${N.notifyImp === i ? 'selected' : ''}>${IMP[i]}${i < 3 ? ' trở lên' : ''}</option>`).join('')}</select></div>
+
+    <div class="fs">Hỗ trợ / kháng cự tự động</div>
+    <div class="fl"><label for="srOn">Hiện trên bảng giá</label><span class="sw"><input type="checkbox" id="srOn" ${R.on ? 'checked' : ''}><span></span></span></div>
+    <div class="fl"><label for="srAll">Hiện đủ mọi khung đã chọn<small>Tắt: chỉ hiện kháng cự và hỗ trợ gần giá nhất</small></label><span class="sw"><input type="checkbox" id="srAll" ${R.all ? 'checked' : ''}><span></span></span></div>
+    <p class="hint">Chọn khung đối chiếu. Số nến = khoảng thời gian tìm đỉnh/đáy.</p>
+    <div class="tfs" id="srTf">${TFS.map(t => `<label><input type="checkbox" value="${t}" ${R.tfs.includes(t) ? 'checked' : ''}><span>${t}</span></label>`).join('')}</div>
+    ${TFS.map(t => `<div class="fl"><span class="lb">${t}: số nến<small>Mặc định ${TF_BARS[t]} nến ≈ ${TF_HINT[t]}</small></span><input class="in num w" data-bars="${t}" inputmode="numeric" value="${R.bars[t] || TF_BARS[t]}"></div>`).join('')}
+
+    <div class="fs">Định nghĩa pip theo nhóm</div>
+    <p class="hint">1 đơn vị bằng bao nhiêu giá. Mỗi sàn có thể khác; sửa cho khớp với cách bạn đếm. Muốn sửa riêng 1 mã: chạm vào mã đó ở tab Cặp tiền.</p>
+    ${Object.entries(PIP_DEF).map(([k, d]) => { const g = S.set.pips.grp[k] || {}; return `<div class="fl"><span class="lb">${esc(d.label)}<small>Mặc định: ${esc(d.note)}</small></span>
+      <input class="in num" style="width:86px;text-align:right" data-pip="${k}" inputmode="decimal" placeholder="${d.size || 'tự'}" value="${g.size || ''}">
+      <select class="in" style="width:76px" data-pipu="${k}">${['pip', 'giá', 'điểm', 'cent'].map(u => `<option ${(g.unit || d.unit) === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>`; }).join('')}
+
+    <div class="fs">Giao diện</div>
+    <div class="seg">${[['dark', 'Nền tối'], ['light', 'Nền sáng']].map(([k, t]) => `<button type="button" data-th="${k}" aria-pressed="${S.set.theme === k}">${t}</button>`).join('')}</div>
+    <div class="foot">FX GOLD Lưu Khánh Tường ${VER} · © 2026 Lưu Khánh Tường – yeahhouse68@gmail.com</div>`;
+  openSheet('Cài đặt', body, {
+    full: true,
+    foot: `<button class="btn" type="button" id="sSave">Lưu cài đặt</button>`,
+    mount: s => {
+      const el = s.el;
+      $('#btnGuide', el).onclick = openGuide;
+      $('#cGen', el).onclick = () => { $('#cKey', el).value = genKey(); };
+      $('#cCode', el).oninput = e => { const m = e.target.value.trim().split('|'); if (m[0] === 'FXR1' && m.length >= 3) { $('#cDb', el).value = m[1]; $('#cKey', el).value = m[2]; toast('Đã điền URL và khoá'); } };
+      $('#cCopy', el).onclick = () => { const db = $('#cDb', el).value.trim(), k = $('#cKey', el).value.trim(); if (!db || !k) return toast('Nhập URL và khoá trước'); copyText('FXR1|' + db + '|' + k); };
+      $('#cGo', el).onclick = () => {
+        const db = $('#cDb', el).value.trim(), k = $('#cKey', el).value.trim();
+        if (!/^https:\/\/[^\s/]+\.(firebaseio\.com|firebasedatabase\.app)\/?$/.test(db)) return toast('URL chưa đúng dạng Firebase Realtime Database');
+        if (k.length < 20) return toast('Khoá cần ít nhất 20 ký tự (bấm Tạo)');
+        S.cfg = {db, key: k, mode: 'live'}; LS.set('fxr.cfg', S.cfg); startLive(); s.close(); toast('Đang kết nối…');
+      };
+      $('#cDemo', el).onclick = () => { S.cfg.mode = 'demo'; LS.set('fxr.cfg', S.cfg); startDemo(); s.close(); };
+      $$('[data-th]', el).forEach(b => b.onclick = () => { S.set.theme = b.dataset.th; applyTheme(); $$('[data-th]', el).forEach(x => x.setAttribute('aria-pressed', x === b)); save(); });
+      $('#sSave', el).onclick = () => {
+        const iv = id => parseInt($(id, el).value, 10);
+        S.set.notify.tg = $('#nTg', el).checked; S.set.notify.push = $('#nPush', el).checked;
+        N.before = Math.max(0, iv('#nB') || 0); N.after = Math.max(0, iv('#nA') || 0);
+        N.hl = +$('#nHl', el).value; N.show = +$('#nSh', el).value; N.notifyMin = Math.max(0, iv('#nNm') || 0); N.notifyImp = +$('#nNi', el).value;
+        R.on = $('#srOn', el).checked; R.all = $('#srAll', el).checked; R.tfs = TFS.filter(t => $(`#srTf input[value="${t}"]`, el).checked);
+        $$('[data-bars]', el).forEach(i => { const v = parseInt(i.value, 10); if (v >= 20 && v <= 2000) R.bars[i.dataset.bars] = v; });
+        $$('[data-pip]', el).forEach(i => { const k = i.dataset.pip, v = parseFloat(String(i.value).replace(',', '.')), u = $(`[data-pipu="${k}"]`, el).value;
+          if (v > 0 || u !== PIP_DEF[k].unit) S.set.pips.grp[k] = {size: v > 0 ? v : 0, unit: u}; else delete S.set.pips.grp[k]; });
+        save(true); s.close(); renderAll(); toast('Đã lưu cài đặt');
+      };
+    }
+  });
+}
+function openGuide() {
+  const db = S.cfg.db.trim() || 'https://TEN-DU-AN-default-rtdb.asia-southeast1.firebasedatabase.app';
+  const key = S.cfg.key.trim() || '(bấm Tạo trong Cài đặt)';
+  const cpBox = (id, t) => `<div class="cp"><code class="code" id="${id}">${esc(t)}</code><button class="btn sm ghost" type="button" data-cp="${id}">Chép</button></div>`;
+  openSheet('Hướng dẫn cài đặt', `
+    <p class="hint" style="margin-top:12px">Làm 1 lần trên máy tính ở nhà, khoảng 15 phút. Mở trang này trên máy tính để chép dán cho nhanh.</p>
+    <div class="step"><span class="n">1</span><div><h4>Tạo Firebase miễn phí</h4><ol>
+      <li>Vào console.firebase.google.com, đăng nhập Google, bấm “Tạo dự án” (tắt Google Analytics).</li>
+      <li>Menu Build → Realtime Database → Create Database → chọn Singapore (asia-southeast1) → Start in locked mode.</li>
+      <li>Mở tab Rules, xoá hết, dán đoạn dưới rồi bấm Publish.</li></ol>
+      ${cpBox('gRules', RULES)}
+      <p>Chép URL hiện ở đầu tab Data (dạng https://…firebasedatabase.app), dán vào Cài đặt của app.</p></div></div>
+    <div class="step"><span class="n">2</span><div><h4>Tạo khoá bí mật</h4><p>Trong Cài đặt của app, bấm “Tạo”. Khoá này là mật khẩu: ai có URL + khoá sẽ xem và sửa được cài đặt của bạn.</p>${cpBox('gKey', key)}</div></div>
+    <div class="step"><span class="n">3</span><div><h4>Cho MT5 kết nối mạng</h4><ol>
+      <li>MT5: Tools → Options → Expert Advisors.</li>
+      <li>Tick “Allow WebRequest for listed URL”, thêm 2 dòng:</li></ol>
+      ${cpBox('gUrl1', db.replace(/\/+$/, ''))}${cpBox('gUrl2', 'https://api.telegram.org')}</div></div>
+    <div class="step"><span class="n">4</span><div><h4>Cài EA FxBridge</h4><ol>
+      <li>MT5: File → Open Data Folder → MQL5 → Experts, chép file FxBridge.mq5 vào.</li>
+      <li>Mở MetaEditor, mở file, bấm Compile (F7). Có lỗi thì chụp gửi Claude. App 0.2 cần EA FxBridge 0.2 (có bộ lọc).</li>
+      <li>Kéo EA vào 1 chart bất kỳ (ví dụ EURUSD M1). Ô InpDbUrl và InpKey dán như trên.</li>
+      <li>Tắt chế độ ngủ của Windows (Settings → Power → Sleep: Never) để EA chạy khi bạn ra ngoài.</li></ol></div></div>
+    <div class="step"><span class="n">5</span><div><h4>Báo động về điện thoại (chọn 1 hoặc cả 2)</h4><ol>
+      <li>Telegram: nhắn @BotFather → /newbot → lấy token. Nhắn cho bot vừa tạo 1 tin bất kỳ. Nhắn @userinfobot để biết chat id. Dán token và chat id vào EA.</li>
+      <li>MT5 Push: mở app MetaTrader 5 trên điện thoại → Settings → Messages, chép MetaQuotes ID. Trên máy tính: Tools → Options → Notifications, dán ID, tick Enable.</li></ol></div></div>
+    <div class="step"><span class="n">6</span><div><h4>Đưa app lên mạng để mở trên điện thoại</h4><ol>
+      <li>Tạo tài khoản github.com (miễn phí) → New repository, tên “fx-radar”, chọn Public → Create.</li>
+      <li>Bấm “uploading an existing file”, kéo file index.html vào → Commit.</li>
+      <li>Settings → Pages → Branch: main, thư mục / (root) → Save. Sau 1–2 phút có link https://TEN.github.io/fx-radar/</li>
+      <li>Mở link trên điện thoại → Cài đặt → dán mã kết nối → Kết nối. Chrome: menu ⋮ → Thêm vào màn hình chính.</li></ol>
+      <p>Bản xem trong Claude chỉ chạy demo vì bị chặn kết nối ra ngoài.</p></div></div>
+    <div class="step"><span class="n">7</span><div><h4>Kiểm tra</h4><p>Góc trên app hiện “EA trực tuyến” màu xanh, giá khớp MT5 là xong. Tab Usage trên Firebase cho biết dung lượng đã dùng (gói miễn phí 10 GB/tháng).</p></div></div>`, {
+    full: true,
+    mount: s => $$('[data-cp]', s.el).forEach(b => b.onclick = () => copyText($('#' + b.dataset.cp, s.el).textContent))
+  });
+}
+
+/* ---------- trạng thái ---------- */
+function statusText() {
+  if (S.demo) return 'Đang xem demo, dữ liệu giả lập';
+  if (S.conn === 'wait') return 'Đang kết nối máy chủ…';
+  if (S.conn === 'err') return S.err || 'Lỗi kết nối';
+  if (S.conn !== 'on') return 'Chưa kết nối';
+  if (!S.hb || !S.hb.t) return 'Máy chủ OK, chưa thấy EA (kiểm tra MT5 ở nhà)';
+  const age = (Date.now() - S.hb.t) / 1000;
+  if (age > 60) return 'EA mất tín hiệu ' + hms(age) + ' (PC tắt hoặc mất mạng?)';
+  return 'EA trực tuyến' + (S.hb.srv ? ' · ' + S.hb.srv : '');
+}
+function renderStatus() {
+  const b = $('#status'), sp = $('span', b);
+  b.className = 'pill';
+  if (S.demo) { b.classList.add('demo'); sp.textContent = 'Demo'; }
+  else if (S.conn === 'on' && S.hb && Date.now() - S.hb.t < 60000) { b.classList.add('ok'); sp.textContent = 'EA trực tuyến'; }
+  else if (S.conn === 'on' || S.conn === 'wait') { sp.textContent = S.conn === 'wait' ? 'Đang kết nối' : 'Chờ EA'; }
+  else if (S.conn === 'err') { b.classList.add('bad'); sp.textContent = 'Lỗi kết nối'; }
+  else sp.textContent = 'Chưa kết nối';
+  const t = $('#stTxt'); if (t) t.textContent = statusText();
+  renderBanner();
+}
+let bannerKey = '';
+function renderBanner() {
+  let h = '';
+  if (S.demo) h = `<div class="banner"><span><b>Demo</b> · dữ liệu giả lập để thử giao diện.</span><button type="button" id="bnGo">Kết nối EA</button></div>`;
+  else if (S.conn === 'err') h = `<div class="banner"><span>${esc(S.err)}. Nếu bạn đang mở trong Claude: trang này chỉ chạy demo.</span><button type="button" id="bnGo">Cài đặt</button></div>`;
+  if (h === bannerKey) return; bannerKey = h;
+  $('#banner').innerHTML = h;
+  const g = $('#bnGo'); if (g) g.onclick = openSettings;
+}
+function applyTheme() { document.documentElement.dataset.theme = S.set.theme; document.querySelector('meta[name=theme-color]').content = S.set.theme === 'light' ? '#F2F4F7' : '#0F151D'; }
+function renderAll() { renderPairs(); renderScan(); if (S.tab === 'cal') renderCal(); renderAlertBadge(); renderStatus(); }
+
+/* ---------- DEMO: dữ liệu giả lập ---------- */
+const DEMO = {
+  fx_major: [['EURUSD', 1.1612, 5], ['GBPUSD', 1.3118, 5], ['USDJPY', 154.72, 3], ['USDCHF', 0.7964, 5], ['USDCAD', 1.4031, 5], ['AUDUSD', 0.6497, 5], ['NZDUSD', 0.5641, 5]],
+  fx_cross: [['EURJPY', 179.66, 3], ['GBPJPY', 202.95, 3], ['EURGBP', 0.8852, 5], ['AUDJPY', 100.52, 3], ['EURCHF', 0.9248, 5], ['GBPCHF', 1.0447, 5], ['CADJPY', 110.27, 3], ['EURAUD', 1.7871, 5], ['AUDNZD', 1.1517, 5]],
+  fx_exotic: [['USDTRY', 42.38, 4], ['USDZAR', 17.31, 4], ['USDMXN', 18.41, 4], ['USDSGD', 1.3042, 5], ['USDHKD', 7.7811, 5], ['USDTHB', 32.46, 3]],
+  metal: [['XAUUSD', 4062.35, 2], ['XAGUSD', 50.412, 3], ['XPTUSD', 1561.8, 2], ['XAUEUR', 3498.6, 2]],
+  energy: [['USOIL', 59.84, 2], ['UKOIL', 63.97, 2], ['XNGUSD', 4.512, 3]],
+  index: [['US30', 47120.5, 1], ['US500', 6712.4, 1], ['USTEC', 24890.2, 1], ['DE30', 23810.6, 1], ['UK100', 9702.3, 1], ['JP225', 50120, 0], ['HK50', 25980, 0], ['AUS200', 8812.4, 1]],
+  crypto: [['BTCUSD', 95210.5, 1], ['ETHUSD', 3184.2, 2], ['SOLUSD', 142.36, 2], ['XRPUSD', 2.2187, 4], ['LTCUSD', 96.41, 2]],
+  stock: [['AAPL', 268.42, 2], ['NVDA', 189.6, 2], ['TSLA', 404.35, 2], ['MSFT', 507.2, 2], ['AMZN', 232.15, 2], ['META', 612.4, 2]]
+};
+const DEMO_PATH = {fx_major: 'Forex\\Majors', fx_cross: 'Forex\\Minors', fx_exotic: 'Forex\\Exotics', metal: 'Metals', energy: 'Energies', index: 'Indices', crypto: 'Crypto', stock: 'Stocks\\US'};
+const DEMO_DESC = {XAUUSD: 'Vàng / Đô la Mỹ', XAGUSD: 'Bạc / Đô la Mỹ', BTCUSD: 'Bitcoin', USOIL: 'Dầu WTI', UKOIL: 'Dầu Brent', US30: 'Dow Jones', US500: 'S&P 500', USTEC: 'Nasdaq 100', DE30: 'DAX Đức', JP225: 'Nikkei 225'};
+let demoT = 0, demoScanT = 0;
+function rnd(seed) { let x = Math.sin(seed) * 10000; return x - Math.floor(x); }
+function startDemo() {
+  FB.close(); clearInterval(demoT);
+  S.demo = true; S.conn = 'off';
+  const sym = [];
+  for (const g in DEMO) DEMO[g].forEach(([n, px, d]) => sym.push({n, p: DEMO_PATH[g] + '\\' + n, ds: DEMO_DESC[n] || '', d, px}));
+  setSymbols(sym);
+  const now = Date.now();
+  S.q = {};
+  sym.forEach((x, i) => {
+    const o = x.px * (1 + (rnd(i + 1) - 0.5) * 0.012);
+    S.q[fk(x.n)] = {n: x.n, b: x.px, a: x.px * (1 + 0.00004), d: x.d, o, h: Math.max(o, x.px) * 1.002, l: Math.min(o, x.px) * 0.998, t: now};
+  });
+  S.sr = {};
+  sym.forEach((x, i) => {
+    const o = {}, step = {M5: .0006, M15: .001, M30: .0016, H1: .0025, H4: .005, D1: .012, W1: .03};
+    for (const tf of TFS) {
+      const s = x.px * step[tf], w = s * 0.18;
+      o[tf] = {r: [[x.px + s * (0.6 + rnd(i * 7 + tf.length)), x.px + s * (0.6 + rnd(i * 7 + tf.length)) + w, 3], [x.px + s * 2.1, x.px + s * 2.1 + w, 2]],
+               s: [[x.px - s * (0.8 + rnd(i * 11 + tf.length)) - w, x.px - s * (0.8 + rnd(i * 11 + tf.length)), 4], [x.px - s * 2.4 - w, x.px - s * 2.4, 2]]};
+    }
+    S.sr[fk(x.n)] = o;
+  });
+  const m = 60000, h = 3600000;
+  const ev = [
+    [-26 * h, 'JPY', 1, 'Trade Balance', '-0.23T', '-0.31T', '-0.15T'], [-20 * h, 'AUD', 2, 'Employment Change', '42.2K', '20.0K', '14.9K'],
+    [-9 * h, 'EUR', 2, 'German Flash Manufacturing PMI', '49.1', '49.6', '49.6'], [-8 * h, 'GBP', 3, 'Retail Sales m/m', '-0.4%', '0.0%', '0.5%'],
+    [-3 * h, 'EUR', 1, 'ECB President Lagarde Speaks', '', '', ''], [2 * m, 'GBP', 3, 'BOE Gov Bailey Speaks', '', '', ''],
+    [14 * m, 'USD', 3, 'Core CPI m/m', '', '0.3%', '0.3%'], [14 * m, 'USD', 3, 'CPI y/y', '', '3.0%', '3.0%'], [75 * m, 'USD', 2, 'Unemployment Claims', '', '227K', '232K'],
+    [3 * h, 'CAD', 2, 'Core Retail Sales m/m', '', '0.2%', '-0.2%'], [5 * h, 'GBP', 2, 'MPC Member Greene Speaks', '', '', ''],
+    [7 * h, 'JPY', 1, 'BOJ Core CPI y/y', '', '2.1%', '2.0%'], [20 * h, 'NZD', 1, 'Retail Sales q/q', '', '0.3%', '0.5%'],
+    [26 * h, 'EUR', 3, 'ECB Main Refinancing Rate', '', '2.15%', '2.15%'], [27 * h, 'USD', 3, 'FOMC Meeting Minutes', '', '', ''],
+    [30 * h, 'CHF', 2, 'CPI m/m', '', '0.1%', '-0.1%'], [50 * h, 'USD', 3, 'Non-Farm Employment Change', '', '110K', '119K'],
+    [50 * h, 'USD', 3, 'Unemployment Rate', '', '4.4%', '4.4%'], [52 * h, 'CAD', 2, 'Employment Change', '', '15.0K', '66.6K'],
+    [74 * h, 'CNY', 2, 'Caixin Services PMI', '', '52.0', '52.6'], [98 * h, 'AUD', 3, 'RBA Rate Statement', '', '', '']
+  ];
+  setCal(ev.map((e, i) => ({id: 'd' + i, t: Math.floor((now + e[0]) / 1000), c: e[1], i: e[2], n: e[3], a: e[0] < 0 ? e[4] : '', f: e[5], p: e[6]})));
+  S.hb = {t: now, srv: 'Demo'};
+  S.log = {};
+  for (const k in DBARS) delete DBARS[k];
+  renderAll();
+  demoT = setInterval(demoTick, 700);
+  clearInterval(demoScanT); runDemoScan(); demoScanT = setInterval(runDemoScan, 5000);
+}
+function demoTick() {
+  const w = allWatch(), now = Date.now();
+  for (const n of w) {
+    const q = S.q[fk(n)]; if (!q || Math.random() < 0.35) continue;
+    const v = q.b * (Math.random() - 0.5) * 0.0006;
+    q.b = +(q.b + v).toFixed(q.d); q.a = +(q.b * 1.00004).toFixed(q.d); q.t = now;
+    q.h = Math.max(q.h, q.b); q.l = Math.min(q.l, q.b);
+  }
+  S.hb.t = now;
+  demoAlerts();
+  schedQuotes();
+}
+const DSTATE = {};
+function demoAlerts() {
+  const now = Date.now();
+  for (const a of Object.values(S.set.alerts)) {
+    if (!a.on || (!(a.rep > 0) && S.fired[a.id])) continue;
+    const st = DSTATE[a.id] = DSTATE[a.id] || {};
+    let hit = false;
+    const q = a.sym && a.sym !== '-' ? quote(a.sym) : null, b = q && q.b;
+    if (a.type === 'L' && b) { if (st.lb) { const up = st.lb < a.p1 && b >= a.p1, dn = st.lb > a.p1 && b <= a.p1; hit = a.dir === 'U' ? up : a.dir === 'D' ? dn : up || dn; } st.lb = b; }
+    if (a.type === 'Z' && b) { const lo = Math.min(a.p1, a.p2), hi = Math.max(a.p1, a.p2), inn = b >= lo && b <= hi; hit = inn && !st.in; st.in = inn; }
+    if (a.type === 'R' && b) { let d = Infinity; (a.tfs || []).forEach(tf => { const z = srZones(a.sym, tf); if (!z) return; if (z.r) d = Math.min(d, Math.max(0, z.r.lo - b)); if (z.s) d = Math.min(d, Math.max(0, b - z.s.hi)); }); const inn = d <= a.dist * pipOf(a.sym).size; hit = inn && !st.in; st.in = inn; }
+    if (a.type === 'N' || a.type === 'E') {
+      const cs = a.type === 'N' ? (a.ccys && a.ccys.length ? a.ccys : ccysOf(a.sym)) : null;
+      for (const e of S.cal) { const dt = e.ms - now; if (dt < 0 || dt > a.mins * 60000) continue;
+        if (a.type === 'E' ? String(e.id) === String(a.ev) : (cs.includes(e.c) && e.i >= a.imp)) { st.done = st.done || {}; if (!st.done[e.id]) { st.done[e.id] = 1; hit = true; } } }
+    }
+    if (hit && a.rep > 0 && st.last && now - st.last < a.rep * 60000) hit = false;
+    if (hit) {
+      st.last = now; const msg = '🔔 ' + alertText(a) + (a.note ? ' — ' + a.note : '');
+      S.log['l' + now + a.id] = {t: now, id: a.id, m: msg}; toast(msg);
+      if (!(a.rep > 0)) { S.fired[a.id] = now; renderAlertBadge(); }
+    }
+  }
+}
+function startLive() {
+  clearInterval(demoT); clearInterval(demoScanT); S.dscan = {}; S.scan = {}; S.demo = false; S.q = {}; S.sr = {}; S.cal = []; CAL_BY = {}; S.hb = null; S.log = {}; S.fired = {}; S.root = {};
+  setSymbols([]); renderAll(); FB.connect();
+}
+
+/* ---------- khởi động ---------- */
+$$('nav.tabbar button').forEach(b => b.onclick = () => {
+  S.tab = b.dataset.tab;
+  $$('nav.tabbar button').forEach(x => x.setAttribute('aria-selected', x === b));
+  $$('section.tab').forEach(s => s.classList.toggle('on', s.id === 'tab-' + S.tab));
+  if (S.tab === 'cal') { renderCal.scrolled = false; renderCal(); } else window.scrollTo({top: 0});
+  if (S.tab === 'scan') renderScan();
+});
+$('#btnPick').onclick = openPicker;
+$('#btnSettings').onclick = openSettings;
+$('#btnAlerts').onclick = openAlerts;
+$('#status').onclick = openSettings;
+setInterval(() => {
+  updateRows();
+  if (S.tab === 'cal') {
+    const now = Date.now();
+    $$('[data-cd]').forEach(x => { x.textContent = 'còn ' + hms((+x.dataset.cd - now) / 1000); });
+    if (calNextMs && now > calNextMs) renderCal();
+  }
+  renderStatus();
+}, 1000);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !S.demo && S.cfg.mode === 'live') {
+    if (!FB.es || FB.es.readyState === 2) FB.connect(); else FB.ping();
+  }
+});
+applyTheme();
+if (S.cfg.mode === 'live' && S.cfg.db && S.cfg.key) startLive(); else startDemo();
+</script>
+</body>
+</html>
